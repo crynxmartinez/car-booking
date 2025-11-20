@@ -58,37 +58,37 @@ export default function Calendar({ selectedDate, onSelectDate, onSelectTime }) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-3xl mx-auto">
       {/* Month Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <button
           onClick={previousMonth}
-          className="p-2 hover:bg-gray-100 rounded-full transition"
+          className="p-3 hover:bg-gray-100 rounded-full transition"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-6 h-6" />
         </button>
-        <h3 className="text-xl font-semibold">
+        <h3 className="text-2xl font-bold">
           {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
         </h3>
         <button
           onClick={nextMonth}
-          className="p-2 hover:bg-gray-100 rounded-full transition"
+          className="p-3 hover:bg-gray-100 rounded-full transition"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-6 h-6" />
         </button>
       </div>
 
       {/* Day Headers */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      <div className="grid grid-cols-7 gap-3 mb-3">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="text-center text-sm font-medium text-gray-600 py-2">
+          <div key={day} className="text-center text-base font-semibold text-gray-700 py-3">
             {day}
           </div>
         ))}
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-3">
         {/* Empty cells for days before month starts */}
         {Array.from({ length: firstDayOfMonth }).map((_, i) => (
           <div key={`empty-${i}`} />
@@ -107,16 +107,16 @@ export default function Calendar({ selectedDate, onSelectDate, onSelectTime }) {
                 onClick={() => !isPast && handleDateClick(day)}
                 disabled={isPast}
                 className={`
-                  w-full aspect-square rounded-lg font-medium transition-all
+                  w-full h-16 rounded-xl font-semibold text-lg transition-all
                   ${isPast 
-                    ? 'text-gray-300 cursor-not-allowed' 
-                    : 'hover:bg-primary/10 cursor-pointer'
+                    ? 'text-gray-300 cursor-not-allowed bg-gray-50' 
+                    : 'hover:bg-primary/10 hover:scale-105 cursor-pointer'
                   }
                   ${isSelected 
-                    ? 'bg-primary text-white hover:bg-primary' 
-                    : 'bg-white border border-gray-200'
+                    ? 'bg-primary text-white hover:bg-primary shadow-lg' 
+                    : 'bg-white border-2 border-gray-200'
                   }
-                  ${showTime ? 'rounded-t-lg rounded-b-none border-b-0' : ''}
+                  ${showTime ? 'rounded-b-none border-b-0' : ''}
                 `}
               >
                 {day}
@@ -124,14 +124,15 @@ export default function Calendar({ selectedDate, onSelectDate, onSelectTime }) {
 
               {/* Time Picker Dropdown */}
               {showTime && (
-                <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-b-lg shadow-xl max-h-48 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 z-50 bg-white border-2 border-t-0 border-primary rounded-b-xl shadow-2xl max-h-64 overflow-y-auto custom-scrollbar">
                   {hours.map(hour => (
                     <button
                       key={hour.value}
                       onClick={() => handleTimeSelect(hour.value)}
                       className={`
-                        w-full px-3 py-2 text-sm text-left hover:bg-primary/10 transition
-                        ${selectedHour === hour.value ? 'bg-primary text-white hover:bg-primary' : ''}
+                        w-full px-4 py-3 text-base font-medium text-left hover:bg-primary/10 transition
+                        ${selectedHour === hour.value ? 'bg-primary text-white hover:bg-primary' : 'text-gray-700'}
+                        first:rounded-t-none last:rounded-b-xl
                       `}
                     >
                       {hour.label}
