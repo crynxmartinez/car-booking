@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Label from '../components/ui/Label'
-import { Lock } from 'lucide-react'
+import { Lock, Home } from 'lucide-react'
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('')
@@ -33,16 +33,25 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-2">
-            <Lock className="w-6 h-6 text-white" />
-          </div>
-          <CardTitle className="text-2xl">Admin Login</CardTitle>
-          <CardDescription>
-            Enter your credentials to access the admin panel
-          </CardDescription>
-        </CardHeader>
+      <div className="w-full max-w-md">
+        <Link 
+          to="/" 
+          className="flex items-center justify-center space-x-2 mb-6 text-gray-700 hover:text-primary transition"
+        >
+          <Home className="w-5 h-5" />
+          <span className="font-medium">Back to Home</span>
+        </Link>
+        
+        <Card className="w-full">
+          <CardHeader className="space-y-1 flex flex-col items-center">
+            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-2">
+              <Lock className="w-6 h-6 text-white" />
+            </div>
+            <CardTitle className="text-2xl">Admin Login</CardTitle>
+            <CardDescription>
+              Enter your credentials to access the admin panel
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -78,6 +87,7 @@ export default function AdminLogin() {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }
