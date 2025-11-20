@@ -6,13 +6,14 @@ import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Label from '../ui/Label'
 import Select from '../ui/Select'
-import { Plus, Edit, Trash2, X } from 'lucide-react'
+import { Plus, Edit, Trash2, X, Upload, Image as ImageIcon } from 'lucide-react'
 
 export default function CarsManagement() {
   const [cars, setCars] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingCar, setEditingCar] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     brand: '',
@@ -49,6 +50,35 @@ export default function CarsManagement() {
       console.error('Error fetching cars:', error)
     }
     setLoading(false)
+  }
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+      const filePath = `cars/${fileName}`
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('car-images')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('car-images')
+        .getPublicUrl(filePath)
+
+      setFormData({ ...formData, images: [publicUrl] })
+      alert('Image uploaded successfully!')
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      alert('Failed to upload image. Make sure the "car-images" bucket exists in Supabase Storage.')
+    }
+    setUploading(false)
   }
 
   const handleSubmit = async (e) => {
@@ -384,17 +414,54 @@ export default function CarsManagement() {
                 </div>
 
                 <div>
-                  <Label htmlFor="image_url">Image URL (Optional)</Label>
-                  <Input
-                    id="image_url"
-                    placeholder="https://example.com/car-image.jpg"
-                    onBlur={(e) => {
-                      if (e.target.value) {
-                        setFormData({...formData, images: [e.target.value]})
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Enter a direct image URL</p>
+                  <Label>Car Image</Label>
+                  <div className="mt-2 space-y-3">
+                    {formData.images && formData.images[0] && (
+                      <div className="relative w-full h-48 border rounded-lg overflow-hidden">
+                        <img 
+                          src={formData.images[0]} 
+                          alt="Car preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({...formData, images: []})}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        id="car-image"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('car-image').click()}
+                        disabled={uploading}
+                        className="w-full"
+                      >
+                        {uploading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            {formData.images && formData.images[0] ? 'Change Image' : 'Upload Image'}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500">Upload a photo of the car (JPG, PNG, max 5MB)</p>
+                  </div>
                 </div>
 
                 <div className="flex gap-2 pt-4">
