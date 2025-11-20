@@ -360,25 +360,6 @@ export default function KanbanBoard() {
                   <p className="text-sm text-gray-700">{selectedBooking.special_requests}</p>
                 </div>
               )}
-
-              <div>
-                <h4 className="font-semibold mb-2">Update Status</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {STATUSES.filter(s => s.id !== selectedBooking.status).map((status) => (
-                    <Button
-                      key={status.id}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        updateBookingStatus(selectedBooking.id, status.id, selectedBooking.ghl_contact_id)
-                        setSelectedBooking(null)
-                      }}
-                    >
-                      Move to {status.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
