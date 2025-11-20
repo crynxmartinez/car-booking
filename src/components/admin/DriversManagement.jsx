@@ -6,13 +6,14 @@ import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Label from '../ui/Label'
 import Select from '../ui/Select'
-import { Plus, Edit, Trash2, X } from 'lucide-react'
+import { Plus, Edit, Trash2, X, Upload } from 'lucide-react'
 
 export default function DriversManagement() {
   const [drivers, setDrivers] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingDriver, setEditingDriver] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     photo_url: '',
@@ -45,6 +46,35 @@ export default function DriversManagement() {
       console.error('Error fetching drivers:', error)
     }
     setLoading(false)
+  }
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+      const filePath = `drivers/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('driver-photos')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('driver-photos')
+        .getPublicUrl(filePath)
+
+      setFormData({ ...formData, photo_url: publicUrl })
+      alert('Photo uploaded successfully!')
+    } catch (error) {
+      console.error('Error uploading photo:', error)
+      alert('Failed to upload photo. Make sure the "driver-photos" bucket exists in Supabase Storage.')
+    }
+    setUploading(false)
   }
 
   const handleSubmit = async (e) => {
@@ -353,14 +383,54 @@ export default function DriversManagement() {
                 </div>
 
                 <div>
-                  <Label htmlFor="photo_url">Photo URL (Optional)</Label>
-                  <Input
-                    id="photo_url"
-                    placeholder="https://example.com/driver-photo.jpg"
-                    value={formData.photo_url}
-                    onChange={(e) => setFormData({...formData, photo_url: e.target.value})}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Enter a direct image URL</p>
+                  <Label>Driver Photo</Label>
+                  <div className="mt-2 space-y-3">
+                    {formData.photo_url && (
+                      <div className="relative w-32 h-32 mx-auto border rounded-full overflow-hidden">
+                        <img 
+                          src={formData.photo_url} 
+                          alt="Driver preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({...formData, photo_url: ''})}
+                          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        id="driver-photo"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('driver-photo').click()}
+                        disabled={uploading}
+                        className="w-full"
+                      >
+                        {uploading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            {formData.photo_url ? 'Change Photo' : 'Upload Photo'}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500">Upload driver's photo (JPG, PNG, max 5MB)</p>
+                  </div>
                 </div>
 
                 <div className="flex gap-2 pt-4">
