@@ -6,6 +6,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { supabase } from '../../lib/supabase'
 import { updateGHLContactTag } from '../../lib/ghl'
 import { formatCurrency, formatDateTime } from '../../lib/utils'
+import { showToast } from '../ui/Toast'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card'
 import Button from '../ui/Button'
 import { Calendar, MapPin, Car as CarIcon, User, Phone, Mail, X } from 'lucide-react'
@@ -170,7 +171,7 @@ export default function KanbanBoard() {
       }
     } catch (error) {
       console.error('Error updating booking:', error)
-      alert('Failed to update booking status')
+      showToast('Failed to update booking status', 'error')
       // Revert on error
       fetchBookings()
     }

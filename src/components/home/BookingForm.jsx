@@ -3,6 +3,7 @@ import { X, Calendar, MapPin, Clock, Car as CarIcon, User, Check } from 'lucide-
 import { supabase } from '../../lib/supabase'
 import { sendBookingToGHL } from '../../lib/ghl'
 import { formatCurrency, generateBookingReference } from '../../lib/utils'
+import { showToast } from '../ui/Toast'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Label from '../ui/Label'
@@ -173,12 +174,12 @@ export default function BookingForm({ isOpen, onClose }) {
         status: 'pending_review',
       }).catch(err => console.error('GHL integration failed (non-critical):', err))
 
-      alert(`Booking successful! Your reference number is: ${bookingReference}`)
+      showToast(`Booking successful! Your reference number is: ${bookingReference}`, 'success', 8000)
       resetForm()
       onClose()
     } catch (error) {
       console.error('Error creating booking:', error)
-      alert('Failed to create booking. Please try again.')
+      showToast('Failed to create booking. Please try again.', 'error')
     }
     setLoading(false)
   }

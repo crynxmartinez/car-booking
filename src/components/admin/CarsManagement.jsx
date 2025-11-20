@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency } from '../../lib/utils'
+import { showToast } from '../ui/Toast'
 import { Card, CardContent } from '../ui/Card'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
@@ -73,10 +74,10 @@ export default function CarsManagement() {
         .getPublicUrl(filePath)
 
       setFormData({ ...formData, images: [publicUrl] })
-      alert('Image uploaded successfully!')
+      showToast('Image uploaded successfully!', 'success')
     } catch (error) {
       console.error('Error uploading image:', error)
-      alert('Failed to upload image. Make sure the "car-images" bucket exists in Supabase Storage.')
+      showToast('Failed to upload image. Make sure the "car-images" bucket exists in Supabase Storage.', 'error')
     }
     setUploading(false)
   }
@@ -106,10 +107,10 @@ export default function CarsManagement() {
 
       resetForm()
       fetchCars()
-      alert(editingCar ? 'Car updated successfully!' : 'Car added successfully!')
+      showToast(editingCar ? 'Car updated successfully!' : 'Car added successfully!', 'success')
     } catch (error) {
       console.error('Error saving car:', error)
-      alert('Failed to save car')
+      showToast('Failed to save car', 'error')
     }
     setLoading(false)
   }
@@ -147,10 +148,10 @@ export default function CarsManagement() {
 
       if (error) throw error
       fetchCars()
-      alert('Car deleted successfully!')
+      showToast('Car deleted successfully!', 'success')
     } catch (error) {
       console.error('Error deleting car:', error)
-      alert('Failed to delete car')
+      showToast('Failed to delete car', 'error')
     }
   }
 

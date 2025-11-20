@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency } from '../../lib/utils'
+import { showToast } from '../ui/Toast'
 import { Card, CardContent } from '../ui/Card'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
@@ -69,10 +70,10 @@ export default function DriversManagement() {
         .getPublicUrl(filePath)
 
       setFormData({ ...formData, photo_url: publicUrl })
-      alert('Photo uploaded successfully!')
+      showToast('Photo uploaded successfully!', 'success')
     } catch (error) {
       console.error('Error uploading photo:', error)
-      alert('Failed to upload photo. Make sure the "driver-photos" bucket exists in Supabase Storage.')
+      showToast('Failed to upload photo. Make sure the "driver-photos" bucket exists in Supabase Storage.', 'error')
     }
     setUploading(false)
   }
@@ -102,10 +103,10 @@ export default function DriversManagement() {
 
       resetForm()
       fetchDrivers()
-      alert(editingDriver ? 'Driver updated successfully!' : 'Driver added successfully!')
+      showToast(editingDriver ? 'Driver updated successfully!' : 'Driver added successfully!', 'success')
     } catch (error) {
       console.error('Error saving driver:', error)
-      alert('Failed to save driver')
+      showToast('Failed to save driver', 'error')
     }
     setLoading(false)
   }
@@ -139,10 +140,10 @@ export default function DriversManagement() {
 
       if (error) throw error
       fetchDrivers()
-      alert('Driver deleted successfully!')
+      showToast('Driver deleted successfully!', 'success')
     } catch (error) {
       console.error('Error deleting driver:', error)
-      alert('Failed to delete driver')
+      showToast('Failed to delete driver', 'error')
     }
   }
 
