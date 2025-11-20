@@ -54,22 +54,28 @@ function DroppableColumn({ status, bookings, onCardClick }) {
 function DraggableBookingCard({ booking, onClick }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: booking.id,
-    data: { booking }
+    data: { booking },
+    transition: {
+      duration: 200,
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    },
   })
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: transition || 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
+    opacity: isDragging ? 0 : 1,
   }
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <Card
-        className="cursor-move hover:shadow-md transition"
+        className="cursor-move hover:shadow-md transition-shadow"
         onClick={(e) => {
           e.stopPropagation()
-          onClick(booking)
+          if (!isDragging) {
+            onClick(booking)
+          }
         }}
       >
         <CardContent className="p-3">
@@ -218,9 +224,14 @@ export default function KanbanBoard() {
             )
           })}
         </div>
-        <DragOverlay dropAnimation={null}>
+        <DragOverlay 
+          dropAnimation={{
+            duration: 200,
+            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+          }}
+        >
           {activeBooking ? (
-            <Card className="cursor-move shadow-2xl rotate-3 scale-105">
+            <Card className="cursor-move shadow-2xl rotate-3 scale-105 opacity-90">
               <CardContent className="p-3">
                 <div className="font-semibold text-sm mb-1">{activeBooking.booking_reference}</div>
                 <div className="text-xs text-gray-600 space-y-1">
