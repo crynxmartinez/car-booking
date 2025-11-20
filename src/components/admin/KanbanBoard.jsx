@@ -86,24 +86,22 @@ export default function KanbanBoard() {
         <p className="text-gray-600 mt-1">Manage all car rental bookings</p>
       </div>
 
-      {bookings.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <p className="text-gray-500 text-lg">No bookings yet. Bookings will appear here when customers make reservations.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {STATUSES.map((status) => {
-            const statusBookings = getBookingsByStatus(status.id)
-            return (
-              <div key={status.id} className="flex flex-col">
-                <div className={`p-3 rounded-t-lg border-2 ${status.color}`}>
-                  <h3 className="font-semibold text-sm">{status.label}</h3>
-                  <span className="text-xs text-gray-600">{statusBookings.length} bookings</span>
-                </div>
-                <div className="space-y-2 p-2 bg-gray-50 rounded-b-lg min-h-[200px] max-h-[600px] overflow-y-auto">
-                  {statusBookings.map((booking) => (
+      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        {STATUSES.map((status) => {
+          const statusBookings = getBookingsByStatus(status.id)
+          return (
+            <div key={status.id} className="flex flex-col">
+              <div className={`p-3 rounded-t-lg border-2 ${status.color}`}>
+                <h3 className="font-semibold text-sm">{status.label}</h3>
+                <span className="text-xs text-gray-600">{statusBookings.length} bookings</span>
+              </div>
+              <div className="space-y-2 p-2 bg-gray-50 rounded-b-lg min-h-[200px] max-h-[600px] overflow-y-auto">
+                {statusBookings.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400 text-xs">
+                    No bookings
+                  </div>
+                ) : (
+                  statusBookings.map((booking) => (
                     <Card
                       key={booking.id}
                       className="cursor-pointer hover:shadow-md transition"
@@ -130,13 +128,13 @@ export default function KanbanBoard() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
+                  ))
+                )}
               </div>
-            )
-          })}
-        </div>
-      )}
+            </div>
+          )
+        })}
+      </div>
 
       {selectedBooking && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
