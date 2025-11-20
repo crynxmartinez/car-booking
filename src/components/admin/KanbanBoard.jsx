@@ -142,6 +142,15 @@ export default function KanbanBoard() {
   }
 
   const updateBookingStatus = async (bookingId, newStatus, ghlContactId) => {
+    // Optimistic update - update UI immediately
+    setBookings(prevBookings => 
+      prevBookings.map(booking => 
+        booking.id === bookingId 
+          ? { ...booking, status: newStatus, updated_at: new Date().toISOString() }
+          : booking
+      )
+    )
+
     try {
       const { error } = await supabase
         .from('bookings')
@@ -153,14 +162,17 @@ export default function KanbanBoard() {
 
       if (error) throw error
 
+      // Update GHL in background (non-blocking)
       if (ghlContactId) {
-        await updateGHLContactTag(ghlContactId, newStatus)
+        updateGHLContactTag(ghlContactId, newStatus).catch(err => 
+          console.error('GHL update failed (non-critical):', err)
+        )
       }
-
-      fetchBookings()
     } catch (error) {
       console.error('Error updating booking:', error)
       alert('Failed to update booking status')
+      // Revert on error
+      fetchBookings()
     }
   }
 
