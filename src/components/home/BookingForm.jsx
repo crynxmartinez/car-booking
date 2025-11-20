@@ -167,10 +167,11 @@ export default function BookingForm({ isOpen, onClose }) {
 
       if (error) throw error
 
-      await sendBookingToGHL({
+      // Send to GHL in background (non-blocking)
+      sendBookingToGHL({
         ...newBooking,
         status: 'pending_review',
-      })
+      }).catch(err => console.error('GHL integration failed (non-critical):', err))
 
       alert(`Booking successful! Your reference number is: ${bookingReference}`)
       resetForm()

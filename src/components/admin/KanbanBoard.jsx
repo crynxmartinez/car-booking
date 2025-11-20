@@ -1,4 +1,8 @@
 import { useState, useEffect } from 'react'
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { useDroppable } from '@dnd-kit/core'
 import { supabase } from '../../lib/supabase'
 import { updateGHLContactTag } from '../../lib/ghl'
 import { formatCurrency, formatDateTime } from '../../lib/utils'
@@ -15,10 +19,96 @@ const STATUSES = [
   { id: 'cancelled', label: 'Cancelled', color: 'bg-red-100 border-red-300' },
 ]
 
+function DroppableColumn({ status, bookings, onCardClick }) {
+  const { setNodeRef } = useDroppable({
+    id: status.id,
+  })
+
+  return (
+    <div ref={setNodeRef} className="flex flex-col">
+      <div className={`p-3 rounded-t-lg border-2 ${status.color}`}>
+        <h3 className="font-semibold text-sm">{status.label}</h3>
+        <span className="text-xs text-gray-600">{bookings.length} bookings</span>
+      </div>
+      <SortableContext items={bookings.map(b => b.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2 p-2 bg-gray-50 rounded-b-lg min-h-[200px] max-h-[600px] overflow-y-auto">
+          {bookings.length === 0 ? (
+            <div className="text-center py-8 text-gray-400 text-xs">
+              No bookings
+            </div>
+          ) : (
+            bookings.map((booking) => (
+              <DraggableBookingCard
+                key={booking.id}
+                booking={booking}
+                onClick={onCardClick}
+              />
+            ))
+          )}
+        </div>
+      </SortableContext>
+    </div>
+  )
+}
+
+function DraggableBookingCard({ booking, onClick }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: booking.id,
+    data: { booking }
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <Card
+        className="cursor-move hover:shadow-md transition"
+        onClick={(e) => {
+          e.stopPropagation()
+          onClick(booking)
+        }}
+      >
+        <CardContent className="p-3">
+          <div className="font-semibold text-sm mb-1">{booking.booking_reference}</div>
+          <div className="text-xs text-gray-600 space-y-1">
+            <div className="flex items-center">
+              <User className="w-3 h-3 mr-1" />
+              {booking.customer_name}
+            </div>
+            <div className="flex items-center">
+              <CarIcon className="w-3 h-3 mr-1" />
+              {booking.cars?.name}
+            </div>
+            <div className="flex items-center">
+              <Calendar className="w-3 h-3 mr-1" />
+              {booking.pickup_date}
+            </div>
+            <div className="font-semibold text-primary mt-2">
+              {formatCurrency(booking.total_price)}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 export default function KanbanBoard() {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
 
   useEffect(() => {
     fetchBookings()
@@ -71,6 +161,21 @@ export default function KanbanBoard() {
     return bookings.filter(b => b.status === status)
   }
 
+  const handleDragEnd = (event) => {
+    const { active, over } = event
+    
+    if (!over) return
+
+    const activeBooking = active.data.current?.booking
+    const overStatus = over.id
+
+    if (activeBooking && STATUSES.find(s => s.id === overStatus)) {
+      if (activeBooking.status !== overStatus) {
+        updateBookingStatus(activeBooking.id, overStatus, activeBooking.ghl_contact_id)
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -83,58 +188,19 @@ export default function KanbanBoard() {
     <div>
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Bookings Dashboard</h1>
-        <p className="text-gray-600 mt-1">Manage all car rental bookings</p>
+        <p className="text-gray-600 mt-1">Manage all car rental bookings. Drag cards to change status.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {STATUSES.map((status) => {
-          const statusBookings = getBookingsByStatus(status.id)
-          return (
-            <div key={status.id} className="flex flex-col">
-              <div className={`p-3 rounded-t-lg border-2 ${status.color}`}>
-                <h3 className="font-semibold text-sm">{status.label}</h3>
-                <span className="text-xs text-gray-600">{statusBookings.length} bookings</span>
-              </div>
-              <div className="space-y-2 p-2 bg-gray-50 rounded-b-lg min-h-[200px] max-h-[600px] overflow-y-auto">
-                {statusBookings.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400 text-xs">
-                    No bookings
-                  </div>
-                ) : (
-                  statusBookings.map((booking) => (
-                    <Card
-                      key={booking.id}
-                      className="cursor-pointer hover:shadow-md transition"
-                      onClick={() => setSelectedBooking(booking)}
-                    >
-                      <CardContent className="p-3">
-                        <div className="font-semibold text-sm mb-1">{booking.booking_reference}</div>
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <div className="flex items-center">
-                            <User className="w-3 h-3 mr-1" />
-                            {booking.customer_name}
-                          </div>
-                          <div className="flex items-center">
-                            <CarIcon className="w-3 h-3 mr-1" />
-                            {booking.cars?.name}
-                          </div>
-                          <div className="flex items-center">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {booking.pickup_date}
-                          </div>
-                          <div className="font-semibold text-primary mt-2">
-                            {formatCurrency(booking.total_price)}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {STATUSES.map((status) => {
+            const statusBookings = getBookingsByStatus(status.id)
+            return (
+              <DroppableColumn key={status.id} status={status} bookings={statusBookings} onCardClick={setSelectedBooking} />
+            )
+          })}
+        </div>
+      </DndContext>
 
       {selectedBooking && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

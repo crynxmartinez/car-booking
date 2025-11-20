@@ -6,11 +6,15 @@ export function cn(...inputs) {
 }
 
 export function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-    minimumFractionDigits: 2,
-  }).format(amount)
+  try {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP',
+      minimumFractionDigits: 2,
+    }).format(amount)
+  } catch (error) {
+    return `₱${parseFloat(amount).toFixed(2)}`
+  }
 }
 
 export function generateBookingReference() {
@@ -20,11 +24,16 @@ export function generateBookingReference() {
 }
 
 export function formatDate(date) {
-  return new Intl.DateFormat('en-PH', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(date))
+  try {
+    return new Intl.DateFormat('en-PH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(new Date(date))
+  } catch (error) {
+    const d = new Date(date)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
 }
 
 export function formatDateTime(date, time) {
