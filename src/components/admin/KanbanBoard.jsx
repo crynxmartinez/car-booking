@@ -25,13 +25,13 @@ function DroppableColumn({ status, bookings, onCardClick }) {
   })
 
   return (
-    <div ref={setNodeRef} className="flex flex-col">
+    <div ref={setNodeRef} className="flex flex-col min-w-0">
       <div className={`p-3 rounded-t-lg border-2 ${status.color}`}>
         <h3 className="font-semibold text-sm">{status.label}</h3>
         <span className="text-xs text-gray-600">{bookings.length} bookings</span>
       </div>
       <SortableContext items={bookings.map(b => b.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-2 p-2 bg-gray-50 rounded-b-lg min-h-[200px] max-h-[600px] overflow-y-auto">
+        <div className="space-y-2 p-2 bg-gray-50 rounded-b-lg min-h-[200px] max-h-[600px] overflow-y-auto overflow-x-hidden">
           {bookings.length === 0 ? (
             <div className="text-center py-8 text-gray-400 text-xs">
               No bookings
@@ -101,6 +101,7 @@ export default function KanbanBoard() {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
+  const [activeBooking, setActiveBooking] = useState(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -161,19 +162,30 @@ export default function KanbanBoard() {
     return bookings.filter(b => b.status === status)
   }
 
+  const handleDragStart = (event) => {
+    const booking = event.active.data.current?.booking
+    setActiveBooking(booking)
+  }
+
   const handleDragEnd = (event) => {
     const { active, over } = event
     
+    setActiveBooking(null)
+    
     if (!over) return
 
-    const activeBooking = active.data.current?.booking
+    const draggedBooking = active.data.current?.booking
     const overStatus = over.id
 
-    if (activeBooking && STATUSES.find(s => s.id === overStatus)) {
-      if (activeBooking.status !== overStatus) {
-        updateBookingStatus(activeBooking.id, overStatus, activeBooking.ghl_contact_id)
+    if (draggedBooking && STATUSES.find(s => s.id === overStatus)) {
+      if (draggedBooking.status !== overStatus) {
+        updateBookingStatus(draggedBooking.id, overStatus, draggedBooking.ghl_contact_id)
       }
     }
+  }
+
+  const handleDragCancel = () => {
+    setActiveBooking(null)
   }
 
   if (loading) {
@@ -191,8 +203,14 @@ export default function KanbanBoard() {
         <p className="text-gray-600 mt-1">Manage all car rental bookings. Drag cards to change status.</p>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <DndContext 
+        sensors={sensors} 
+        collisionDetection={closestCenter} 
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-6 gap-4 overflow-x-auto pb-4">
           {STATUSES.map((status) => {
             const statusBookings = getBookingsByStatus(status.id)
             return (
@@ -200,6 +218,32 @@ export default function KanbanBoard() {
             )
           })}
         </div>
+        <DragOverlay dropAnimation={null}>
+          {activeBooking ? (
+            <Card className="cursor-move shadow-2xl rotate-3 scale-105">
+              <CardContent className="p-3">
+                <div className="font-semibold text-sm mb-1">{activeBooking.booking_reference}</div>
+                <div className="text-xs text-gray-600 space-y-1">
+                  <div className="flex items-center">
+                    <User className="w-3 h-3 mr-1" />
+                    {activeBooking.customer_name}
+                  </div>
+                  <div className="flex items-center">
+                    <CarIcon className="w-3 h-3 mr-1" />
+                    {activeBooking.cars?.name}
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {activeBooking.pickup_date}
+                  </div>
+                  <div className="font-semibold text-primary mt-2">
+                    {formatCurrency(activeBooking.total_price)}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       {selectedBooking && (
