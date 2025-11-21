@@ -53,20 +53,15 @@ export default function BookingFormNew({ isOpen, onClose }) {
       const { data, error } = await supabase
         .from('cars')
         .select('*')
-        .eq('status', 'available')
         .order('name')
+      
+      console.log('Cars fetch result:', { data, error, count: data?.length })
       
       if (error) {
         console.error('Error fetching cars:', error)
-        // Try without status filter if error
-        const { data: allCars } = await supabase
-          .from('cars')
-          .select('*')
-          .order('name')
-        setCars(allCars || [])
-      } else {
-        setCars(data || [])
       }
+      
+      setCars(data || [])
     } catch (err) {
       console.error('Failed to fetch cars:', err)
     }
@@ -77,19 +72,15 @@ export default function BookingFormNew({ isOpen, onClose }) {
       const { data, error } = await supabase
         .from('drivers')
         .select('*')
-        .eq('status', 'available')
         .order('name')
+      
+      console.log('Drivers fetch result:', { data, error, count: data?.length })
       
       if (error) {
         console.error('Error fetching drivers:', error)
-        const { data: allDrivers } = await supabase
-          .from('drivers')
-          .select('*')
-          .order('name')
-        setDrivers(allDrivers || [])
-      } else {
-        setDrivers(data || [])
       }
+      
+      setDrivers(data || [])
     } catch (err) {
       console.error('Failed to fetch drivers:', err)
     }
@@ -332,6 +323,14 @@ export default function BookingFormNew({ isOpen, onClose }) {
                 <p className="text-gray-600">Select from our available vehicles</p>
               </div>
 
+              {/* Debug info */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
+                <p className="text-sm">
+                  <strong>Debug:</strong> Found {cars.length} car(s). 
+                  {cars.length > 0 && ` First car: ${cars[0]?.name || 'No name'}`}
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cars.map(car => (
                   <Card
@@ -344,9 +343,9 @@ export default function BookingFormNew({ isOpen, onClose }) {
                     onClick={() => setSelectedCar(car)}
                   >
                     <CardContent className="p-4">
-                      {car.images?.[0] && (
+                      {car.image_url && (
                         <img
-                          src={car.images[0]}
+                          src={car.image_url}
                           alt={car.name}
                           className="w-full h-40 object-cover rounded-lg mb-3"
                         />
@@ -368,7 +367,8 @@ export default function BookingFormNew({ isOpen, onClose }) {
 
               {cars.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No cars available. Please add cars in the admin panel.
+                  <p className="mb-2">No cars available. Please add cars in the admin panel.</p>
+                  <p className="text-xs">Check browser console (F12) for more details.</p>
                 </div>
               )}
 
