@@ -27,33 +27,45 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. Set policies for car-images bucket
-CREATE POLICY IF NOT EXISTS "Allow authenticated uploads to car-images"
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow authenticated uploads to car-images" ON storage.objects;
+DROP POLICY IF EXISTS "Public read access for car-images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated deletes from car-images" ON storage.objects;
+
+-- Create new policies
+CREATE POLICY "Allow authenticated uploads to car-images"
 ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (bucket_id = 'car-images');
 
-CREATE POLICY IF NOT EXISTS "Public read access for car-images"
+CREATE POLICY "Public read access for car-images"
 ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'car-images');
 
-CREATE POLICY IF NOT EXISTS "Allow authenticated deletes from car-images"
+CREATE POLICY "Allow authenticated deletes from car-images"
 ON storage.objects FOR DELETE
 TO authenticated
 USING (bucket_id = 'car-images');
 
 -- 4. Set policies for driver-photos bucket
-CREATE POLICY IF NOT EXISTS "Allow authenticated uploads to driver-photos"
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow authenticated uploads to driver-photos" ON storage.objects;
+DROP POLICY IF EXISTS "Public read access for driver-photos" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated deletes from driver-photos" ON storage.objects;
+
+-- Create new policies
+CREATE POLICY "Allow authenticated uploads to driver-photos"
 ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (bucket_id = 'driver-photos');
 
-CREATE POLICY IF NOT EXISTS "Public read access for driver-photos"
+CREATE POLICY "Public read access for driver-photos"
 ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'driver-photos');
 
-CREATE POLICY IF NOT EXISTS "Allow authenticated deletes from driver-photos"
+CREATE POLICY "Allow authenticated deletes from driver-photos"
 ON storage.objects FOR DELETE
 TO authenticated
 USING (bucket_id = 'driver-photos');
