@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Navbar from '../components/home/Navbar'
 import Hero from '../components/home/Hero'
-import NewBookingForm from '../components/home/NewBookingForm'
+import BookingFormNew from '../components/home/BookingFormNew'
 import Footer from '../components/home/Footer'
 
 export default function Home() {
@@ -12,7 +12,7 @@ export default function Home() {
       <Navbar />
       <main className="flex-1">
         <Hero onBookNow={() => setShowBooking(true)} />
-        <NewBookingForm isOpen={showBooking} onClose={() => setShowBooking(false)} />
+        <BookingFormNew isOpen={showBooking} onClose={() => setShowBooking(false)} />
       </main>
       <Footer />
     </div>

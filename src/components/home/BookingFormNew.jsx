@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Calendar as CalendarIcon, Car as CarIcon, User, Clock, MapPin } from 'lucide-react'
+import { X, Calendar as CalendarIcon, MapPin, Car as CarIcon, User, Clock } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { sendBookingToGHL } from '../../lib/ghl'
 import { formatCurrency, generateBookingReference } from '../../lib/utils'
@@ -10,7 +10,7 @@ import Label from '../ui/Label'
 import { Card, CardContent } from '../ui/Card'
 import Calendar from './Calendar'
 
-export default function NewBookingForm({ isOpen, onClose }) {
+export default function BookingFormNew({ isOpen, onClose }) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   
@@ -19,19 +19,19 @@ export default function NewBookingForm({ isOpen, onClose }) {
   const [selectedTime, setSelectedTime] = useState(null)
   
   // Step 2: Trip Type
-  const [tripType, setTripType] = useState(null) // 'within_city' or 'outside_city'
+  const [tripType, setTripType] = useState(null)
   
-  // Step 3: Available Cars (filtered by trip type)
+  // Step 3: Cars
   const [cars, setCars] = useState([])
   const [selectedCar, setSelectedCar] = useState(null)
   
-  // Step 4: Driver Option
+  // Step 4: Driver
   const [needDriver, setNeedDriver] = useState(null)
   const [drivers, setDrivers] = useState([])
   const [selectedDriver, setSelectedDriver] = useState(null)
   
   // Step 5: Duration
-  const [duration, setDuration] = useState(null) // 6, 12, or 24 hours
+  const [duration, setDuration] = useState(null)
   
   // Step 6: Customer Details
   const [customerData, setCustomerData] = useState({
@@ -73,14 +73,13 @@ export default function NewBookingForm({ isOpen, onClose }) {
     let price = 0
     
     if (duration === 6) {
-      price = baseRate * 0.3 // 30% of daily rate for 6 hours
+      price = baseRate * 0.3
     } else if (duration === 12) {
-      price = baseRate * 0.5 // 50% of daily rate for 12 hours
+      price = baseRate * 0.5
     } else if (duration === 24) {
-      price = baseRate // Full daily rate
+      price = baseRate
     }
     
-    // Add driver fee if needed
     if (needDriver && selectedDriver) {
       const driverRate = selectedDriver.rate_per_day
       if (duration === 6) {
@@ -92,9 +91,8 @@ export default function NewBookingForm({ isOpen, onClose }) {
       }
     }
     
-    // Add surcharge for outside city
     if (tripType === 'outside_city') {
-      price *= 1.2 // 20% surcharge
+      price *= 1.2
     }
     
     return price
@@ -120,7 +118,7 @@ export default function NewBookingForm({ isOpen, onClose }) {
         driver_id: needDriver ? selectedDriver?.id : null,
         pickup_date: pickupDateTime.toISOString().split('T')[0],
         pickup_time: pickupDateTime.toTimeString().split(' ')[0],
-        pickup_location: 'Office', // Default
+        pickup_location: 'Office',
         dropoff_date: dropoffDateTime.toISOString().split('T')[0],
         dropoff_time: dropoffDateTime.toTimeString().split(' ')[0],
         dropoff_location: tripType === 'within_city' ? 'Office' : 'Outside City',
@@ -139,7 +137,6 @@ export default function NewBookingForm({ isOpen, onClose }) {
 
       if (error) throw error
 
-      // Send to GHL in background (non-blocking)
       sendBookingToGHL({
         ...newBooking,
         status: 'pending_review',
@@ -159,11 +156,11 @@ export default function NewBookingForm({ isOpen, onClose }) {
     setStep(1)
     setSelectedDate(null)
     setSelectedTime(null)
-    setSelectedCar(null)
     setTripType(null)
-    setDuration(null)
+    setSelectedCar(null)
     setNeedDriver(null)
     setSelectedDriver(null)
+    setDuration(null)
     setCustomerData({
       name: '',
       email: '',
@@ -172,14 +169,9 @@ export default function NewBookingForm({ isOpen, onClose }) {
     })
   }
 
-  const canProceedFromStep1 = selectedDate && selectedTime !== null
-  const canProceedFromStep2 = tripType
-  const canProceedFromStep3 = selectedCar
-  const canProceedFromStep4 = needDriver === false || (needDriver === true && selectedDriver)
-  const canProceedFromStep5 = duration
-  const canSubmit = customerData.name && customerData.email && customerData.phone
-
   if (!isOpen) return null
+
+  const stepLabels = ['Date', 'Trip Type', 'Car', 'Driver', 'Duration', 'Details']
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -213,18 +205,15 @@ export default function NewBookingForm({ isOpen, onClose }) {
             ))}
           </div>
           <div className="flex justify-between text-xs text-gray-600">
-            <span>Date</span>
-            <span>Trip Type</span>
-            <span>Car</span>
-            <span>Driver</span>
-            <span>Duration</span>
-            <span>Details</span>
+            {stepLabels.map((label, i) => (
+              <span key={i}>{label}</span>
+            ))}
           </div>
         </div>
 
         {/* Content */}
         <div className="p-6">
-          {/* Step 1: Date & Time Selection */}
+          {/* Step 1: Date & Time */}
           {step === 1 && (
             <div className="space-y-6">
               <div className="text-center mb-6">
@@ -242,7 +231,7 @@ export default function NewBookingForm({ isOpen, onClose }) {
               <div className="flex justify-end">
                 <Button
                   onClick={() => setStep(2)}
-                  disabled={!canProceedFromStep1}
+                  disabled={!selectedDate || selectedTime === null}
                 >
                   Continue
                 </Button>
@@ -250,7 +239,7 @@ export default function NewBookingForm({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* Step 2: Trip Type Selection */}
+          {/* Step 2: Trip Type */}
           {step === 2 && (
             <div className="space-y-6">
               <div className="text-center mb-6">
@@ -297,7 +286,7 @@ export default function NewBookingForm({ isOpen, onClose }) {
                 </Button>
                 <Button
                   onClick={() => setStep(3)}
-                  disabled={!canProceedFromStep2}
+                  disabled={!tripType}
                 >
                   Continue
                 </Button>
@@ -348,13 +337,19 @@ export default function NewBookingForm({ isOpen, onClose }) {
                 ))}
               </div>
 
+              {cars.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No cars available. Please add cars in the admin panel.
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setStep(2)}>
                   Back
                 </Button>
                 <Button
                   onClick={() => setStep(4)}
-                  disabled={!canProceedFromStep3}
+                  disabled={!selectedCar}
                 >
                   Continue
                 </Button>
@@ -371,138 +366,7 @@ export default function NewBookingForm({ isOpen, onClose }) {
                 <p className="text-gray-600">Choose to drive solo or with a professional driver</p>
               </div>
 
-              {/* Trip Type */}
-              <div>
-                <Label className="mb-3 block">Trip Type</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <Card
-                    className={`cursor-pointer transition-all ${
-                      tripType === 'within_city'
-                        ? 'ring-2 ring-primary shadow-lg'
-                        : 'hover:shadow-md'
-                    }`}
-                    onClick={() => {
-                      setTripType('within_city')
-                      setDuration(null) // Reset duration when changing trip type
-                    }}
-                  >
-                    <CardContent className="p-6 text-center">
-                      <div className="text-4xl mb-2">🏙️</div>
-                      <h4 className="font-semibold">Within City</h4>
-                      <p className="text-sm text-gray-600 mt-1">Local trips</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card
-                    className={`cursor-pointer transition-all ${
-                      tripType === 'outside_city'
-                        ? 'ring-2 ring-primary shadow-lg'
-                        : 'hover:shadow-md'
-                    }`}
-                    onClick={() => {
-                      setTripType('outside_city')
-                      if (duration === 6) setDuration(null) // Reset if 6 hours was selected
-                    }}
-                  >
-                    <CardContent className="p-6 text-center">
-                      <div className="text-4xl mb-2">🌄</div>
-                      <h4 className="font-semibold">Outside City</h4>
-                      <p className="text-sm text-gray-600 mt-1">+20% surcharge</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Duration */}
-              {tripType && (
-                <div>
-                  <Label className="mb-3 block">Duration</Label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {tripType === 'within_city' && (
-                      <Card
-                        className={`cursor-pointer transition-all ${
-                          duration === 6
-                            ? 'ring-2 ring-primary shadow-lg'
-                            : 'hover:shadow-md'
-                        }`}
-                        onClick={() => setDuration(6)}
-                      >
-                        <CardContent className="p-6 text-center">
-                          <Clock className="w-8 h-8 text-primary mx-auto mb-2" />
-                          <h4 className="font-semibold text-lg">6 Hours</h4>
-                          <p className="text-sm text-gray-600 mt-1">Half day</p>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    <Card
-                      className={`cursor-pointer transition-all ${
-                        duration === 12
-                          ? 'ring-2 ring-primary shadow-lg'
-                          : 'hover:shadow-md'
-                      }`}
-                      onClick={() => setDuration(12)}
-                    >
-                      <CardContent className="p-6 text-center">
-                        <Clock className="w-8 h-8 text-primary mx-auto mb-2" />
-                        <h4 className="font-semibold text-lg">12 Hours</h4>
-                        <p className="text-sm text-gray-600 mt-1">Extended</p>
-                      </CardContent>
-                    </Card>
-
-                    <Card
-                      className={`cursor-pointer transition-all ${
-                        duration === 24
-                          ? 'ring-2 ring-primary shadow-lg'
-                          : 'hover:shadow-md'
-                      }`}
-                      onClick={() => setDuration(24)}
-                    >
-                      <CardContent className="p-6 text-center">
-                        <Clock className="w-8 h-8 text-primary mx-auto mb-2" />
-                        <h4 className="font-semibold text-lg">24 Hours</h4>
-                        <p className="text-sm text-gray-600 mt-1">Full day</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              )}
-
-              {/* Price Preview */}
-              {canProceedFromStep3 && (
-                <div className="bg-primary/10 rounded-lg p-4 text-center">
-                  <p className="text-sm text-gray-600">Estimated Price</p>
-                  <p className="text-2xl font-bold text-primary">{formatCurrency(calculatePrice())}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {tripType === 'outside_city' && '(includes 20% outside city surcharge)'}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(2)}>
-                  Back
-                </Button>
-                <Button
-                  onClick={() => setStep(4)}
-                  disabled={!canProceedFromStep3}
-                >
-                  Continue
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Driver Selection */}
-          {step === 4 && (
-            <div className="space-y-6">
-              <div className="text-center mb-6">
-                <User className="w-12 h-12 text-primary mx-auto mb-2" />
-                <h3 className="text-xl font-semibold">Do you need a driver?</h3>
-                <p className="text-gray-600">Choose to drive solo or with a professional driver</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-2 gap-6">
                 <Card
                   className={`cursor-pointer transition-all ${
                     needDriver === false
@@ -514,10 +378,10 @@ export default function NewBookingForm({ isOpen, onClose }) {
                     setSelectedDriver(null)
                   }}
                 >
-                  <CardContent className="p-6 text-center">
-                    <div className="text-4xl mb-2">🚗</div>
-                    <h4 className="font-semibold">Drive Solo</h4>
-                    <p className="text-sm text-gray-600 mt-1">Self-drive</p>
+                  <CardContent className="p-8 text-center">
+                    <div className="text-6xl mb-4">🚗</div>
+                    <h4 className="font-semibold text-lg">Drive Solo</h4>
+                    <p className="text-sm text-gray-600 mt-2">Self-drive</p>
                   </CardContent>
                 </Card>
 
@@ -529,18 +393,17 @@ export default function NewBookingForm({ isOpen, onClose }) {
                   }`}
                   onClick={() => setNeedDriver(true)}
                 >
-                  <CardContent className="p-6 text-center">
-                    <div className="text-4xl mb-2">👨‍✈️</div>
-                    <h4 className="font-semibold">With Driver</h4>
-                    <p className="text-sm text-gray-600 mt-1">Professional service</p>
+                  <CardContent className="p-8 text-center">
+                    <div className="text-6xl mb-4">👨‍✈️</div>
+                    <h4 className="font-semibold text-lg">With Driver</h4>
+                    <p className="text-sm text-gray-600 mt-2">Professional service</p>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Driver Selection */}
               {needDriver === true && (
                 <div>
-                  <Label className="mb-3 block">Select Your Driver</Label>
+                  <Label className="mb-3 block text-lg font-semibold">Select Your Driver</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {drivers.map(driver => (
                       <Card
@@ -575,18 +438,10 @@ export default function NewBookingForm({ isOpen, onClose }) {
                       </Card>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Updated Price */}
-              {canProceedFromStep4 && (
-                <div className="bg-primary/10 rounded-lg p-4 text-center">
-                  <p className="text-sm text-gray-600">Total Estimated Price</p>
-                  <p className="text-2xl font-bold text-primary">{formatCurrency(calculatePrice())}</p>
-                  {needDriver && selectedDriver && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      (includes driver fee: {formatCurrency(selectedDriver.rate_per_day * (duration / 24))})
-                    </p>
+                  {drivers.length === 0 && (
+                    <div className="text-center py-4 text-gray-500">
+                      No drivers available. Please add drivers in the admin panel.
+                    </div>
                   )}
                 </div>
               )}
@@ -597,7 +452,7 @@ export default function NewBookingForm({ isOpen, onClose }) {
                 </Button>
                 <Button
                   onClick={() => setStep(5)}
-                  disabled={!canProceedFromStep4}
+                  disabled={needDriver === null || (needDriver === true && !selectedDriver)}
                 >
                   Continue
                 </Button>
@@ -605,8 +460,104 @@ export default function NewBookingForm({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* Step 5: Customer Details */}
+          {/* Step 5: Duration */}
           {step === 5 && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <Clock className="w-12 h-12 text-primary mx-auto mb-2" />
+                <h3 className="text-xl font-semibold">How long do you need the car?</h3>
+                <p className="text-gray-600">Select rental duration</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                {tripType === 'within_city' && (
+                  <Card
+                    className={`cursor-pointer transition-all ${
+                      duration === 6
+                        ? 'ring-2 ring-primary shadow-lg'
+                        : 'hover:shadow-md'
+                    }`}
+                    onClick={() => setDuration(6)}
+                  >
+                    <CardContent className="p-8 text-center">
+                      <Clock className="w-12 h-12 text-primary mx-auto mb-3" />
+                      <h4 className="font-semibold text-xl">6 Hours</h4>
+                      <p className="text-sm text-gray-600 mt-2">Half day</p>
+                      <p className="text-lg font-bold text-primary mt-3">
+                        {formatCurrency(selectedCar.price_per_day * 0.3)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card
+                  className={`cursor-pointer transition-all ${
+                    duration === 12
+                      ? 'ring-2 ring-primary shadow-lg'
+                      : 'hover:shadow-md'
+                  }`}
+                  onClick={() => setDuration(12)}
+                >
+                  <CardContent className="p-8 text-center">
+                    <Clock className="w-12 h-12 text-primary mx-auto mb-3" />
+                    <h4 className="font-semibold text-xl">12 Hours</h4>
+                    <p className="text-sm text-gray-600 mt-2">Extended</p>
+                    <p className="text-lg font-bold text-primary mt-3">
+                      {formatCurrency(selectedCar.price_per_day * 0.5)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  className={`cursor-pointer transition-all ${
+                    duration === 24
+                      ? 'ring-2 ring-primary shadow-lg'
+                      : 'hover:shadow-md'
+                  }`}
+                  onClick={() => setDuration(24)}
+                >
+                  <CardContent className="p-8 text-center">
+                    <Clock className="w-12 h-12 text-primary mx-auto mb-3" />
+                    <h4 className="font-semibold text-xl">24 Hours</h4>
+                    <p className="text-sm text-gray-600 mt-2">Full day</p>
+                    <p className="text-lg font-bold text-primary mt-3">
+                      {formatCurrency(selectedCar.price_per_day)}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {duration && (
+                <div className="bg-primary/10 rounded-lg p-6 text-center">
+                  <p className="text-sm text-gray-600 mb-2">Total Estimated Price</p>
+                  <p className="text-3xl font-bold text-primary">{formatCurrency(calculatePrice())}</p>
+                  {tripType === 'outside_city' && (
+                    <p className="text-xs text-gray-500 mt-2">(includes 20% outside city surcharge)</p>
+                  )}
+                  {needDriver && selectedDriver && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      (includes driver fee)
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setStep(4)}>
+                  Back
+                </Button>
+                <Button
+                  onClick={() => setStep(6)}
+                  disabled={!duration}
+                >
+                  Continue
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Customer Details */}
+          {step === 6 && (
             <div className="space-y-6">
               <div className="text-center mb-6">
                 <User className="w-12 h-12 text-primary mx-auto mb-2" />
@@ -675,11 +626,6 @@ export default function NewBookingForm({ isOpen, onClose }) {
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Car:</span>
-                  <span className="font-medium">{selectedCar?.name}</span>
-                </div>
-
-                <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Trip Type:</span>
                   <span className="font-medium">
                     {tripType === 'within_city' ? 'Within City' : 'Outside City'}
@@ -687,8 +633,8 @@ export default function NewBookingForm({ isOpen, onClose }) {
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Duration:</span>
-                  <span className="font-medium">{duration} hours</span>
+                  <span className="text-gray-600">Car:</span>
+                  <span className="font-medium">{selectedCar?.name}</span>
                 </div>
 
                 <div className="flex justify-between text-sm">
@@ -696,6 +642,11 @@ export default function NewBookingForm({ isOpen, onClose }) {
                   <span className="font-medium">
                     {needDriver ? selectedDriver?.name : 'Self-drive'}
                   </span>
+                </div>
+
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Duration:</span>
+                  <span className="font-medium">{duration} hours</span>
                 </div>
 
                 <div className="border-t pt-3 mt-3">
@@ -709,12 +660,12 @@ export default function NewBookingForm({ isOpen, onClose }) {
               </div>
 
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(4)}>
+                <Button variant="outline" onClick={() => setStep(5)}>
                   Back
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  disabled={!canSubmit || loading}
+                  disabled={!customerData.name || !customerData.email || !customerData.phone || loading}
                 >
                   {loading ? 'Processing...' : 'Confirm Booking'}
                 </Button>
