@@ -18,20 +18,22 @@ export default function NewBookingForm({ isOpen, onClose }) {
   const [selectedDate, setSelectedDate] = useState(null)
   const [selectedTime, setSelectedTime] = useState(null)
   
-  // Step 2: Available Cars
+  // Step 2: Trip Type
+  const [tripType, setTripType] = useState(null) // 'within_city' or 'outside_city'
+  
+  // Step 3: Available Cars (filtered by trip type)
   const [cars, setCars] = useState([])
   const [selectedCar, setSelectedCar] = useState(null)
-  
-  // Step 3: Trip Type & Duration
-  const [tripType, setTripType] = useState(null) // 'within_city' or 'outside_city'
-  const [duration, setDuration] = useState(null) // 6, 12, or 24 hours
   
   // Step 4: Driver Option
   const [needDriver, setNeedDriver] = useState(null)
   const [drivers, setDrivers] = useState([])
   const [selectedDriver, setSelectedDriver] = useState(null)
   
-  // Step 5: Customer Details
+  // Step 5: Duration
+  const [duration, setDuration] = useState(null) // 6, 12, or 24 hours
+  
+  // Step 6: Customer Details
   const [customerData, setCustomerData] = useState({
     name: '',
     email: '',
@@ -171,9 +173,10 @@ export default function NewBookingForm({ isOpen, onClose }) {
   }
 
   const canProceedFromStep1 = selectedDate && selectedTime !== null
-  const canProceedFromStep2 = selectedCar
-  const canProceedFromStep3 = tripType && duration
+  const canProceedFromStep2 = tripType
+  const canProceedFromStep3 = selectedCar
   const canProceedFromStep4 = needDriver === false || (needDriver === true && selectedDriver)
+  const canProceedFromStep5 = duration
   const canSubmit = customerData.name && customerData.email && customerData.phone
 
   if (!isOpen) return null
@@ -185,7 +188,7 @@ export default function NewBookingForm({ isOpen, onClose }) {
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Book Your Ride</h2>
-            <p className="text-sm text-gray-600">Step {step} of 5</p>
+            <p className="text-sm text-gray-600">Step {step} of 6</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition">
             <X className="w-6 h-6" />
@@ -195,7 +198,7 @@ export default function NewBookingForm({ isOpen, onClose }) {
         {/* Progress Bar */}
         <div className="px-6 py-4 bg-gray-50">
           <div className="flex items-center justify-between mb-2">
-            {[1, 2, 3, 4, 5].map((s) => (
+            {[1, 2, 3, 4, 5, 6].map((s) => (
               <div key={s} className="flex items-center flex-1">
                 <div className={`
                   w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm
@@ -203,18 +206,19 @@ export default function NewBookingForm({ isOpen, onClose }) {
                 `}>
                   {s}
                 </div>
-                {s < 5 && (
+                {s < 6 && (
                   <div className={`flex-1 h-1 mx-2 ${s < step ? 'bg-primary' : 'bg-gray-200'}`} />
                 )}
               </div>
             ))}
           </div>
           <div className="flex justify-between text-xs text-gray-600">
-            <span>Date & Time</span>
-            <span>Select Car</span>
-            <span>Trip Details</span>
+            <span>Date</span>
+            <span>Trip Type</span>
+            <span>Car</span>
             <span>Driver</span>
-            <span>Your Info</span>
+            <span>Duration</span>
+            <span>Details</span>
           </div>
         </div>
 
@@ -246,8 +250,63 @@ export default function NewBookingForm({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* Step 2: Car Selection */}
+          {/* Step 2: Trip Type Selection */}
           {step === 2 && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <MapPin className="w-12 h-12 text-primary mx-auto mb-2" />
+                <h3 className="text-xl font-semibold">Where are you going?</h3>
+                <p className="text-gray-600">Select your trip type</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <Card
+                  className={`cursor-pointer transition-all ${
+                    tripType === 'within_city'
+                      ? 'ring-2 ring-primary shadow-lg'
+                      : 'hover:shadow-md'
+                  }`}
+                  onClick={() => setTripType('within_city')}
+                >
+                  <CardContent className="p-8 text-center">
+                    <div className="text-6xl mb-4">🏙️</div>
+                    <h4 className="font-semibold text-lg">Within City</h4>
+                    <p className="text-sm text-gray-600 mt-2">Local trips around the city</p>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  className={`cursor-pointer transition-all ${
+                    tripType === 'outside_city'
+                      ? 'ring-2 ring-primary shadow-lg'
+                      : 'hover:shadow-md'
+                  }`}
+                  onClick={() => setTripType('outside_city')}
+                >
+                  <CardContent className="p-8 text-center">
+                    <div className="text-6xl mb-4">🌄</div>
+                    <h4 className="font-semibold text-lg">Outside City</h4>
+                    <p className="text-sm text-gray-600 mt-2">+20% surcharge</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  Back
+                </Button>
+                <Button
+                  onClick={() => setStep(3)}
+                  disabled={!canProceedFromStep2}
+                >
+                  Continue
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Car Selection */}
+          {step === 3 && (
             <div className="space-y-6">
               <div className="text-center mb-6">
                 <CarIcon className="w-12 h-12 text-primary mx-auto mb-2" />
@@ -290,12 +349,12 @@ export default function NewBookingForm({ isOpen, onClose }) {
               </div>
 
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(1)}>
+                <Button variant="outline" onClick={() => setStep(2)}>
                   Back
                 </Button>
                 <Button
-                  onClick={() => setStep(3)}
-                  disabled={!canProceedFromStep2}
+                  onClick={() => setStep(4)}
+                  disabled={!canProceedFromStep3}
                 >
                   Continue
                 </Button>
@@ -303,13 +362,13 @@ export default function NewBookingForm({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* Step 3: Trip Type & Duration */}
-          {step === 3 && (
+          {/* Step 4: Driver Selection */}
+          {step === 4 && (
             <div className="space-y-6">
               <div className="text-center mb-6">
-                <MapPin className="w-12 h-12 text-primary mx-auto mb-2" />
-                <h3 className="text-xl font-semibold">Trip Details</h3>
-                <p className="text-gray-600">Where are you going and for how long?</p>
+                <User className="w-12 h-12 text-primary mx-auto mb-2" />
+                <h3 className="text-xl font-semibold">Do you need a driver?</h3>
+                <p className="text-gray-600">Choose to drive solo or with a professional driver</p>
               </div>
 
               {/* Trip Type */}
