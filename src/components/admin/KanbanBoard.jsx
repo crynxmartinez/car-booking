@@ -194,11 +194,19 @@ export default function KanbanBoard() {
     if (!over) return
 
     const draggedBooking = active.data.current?.booking
-    const overStatus = over.id
+    
+    // Check if dropped on a column (status ID)
+    let targetStatus = over.id
+    
+    // If dropped on another card, get that card's status
+    if (over.data.current?.booking) {
+      targetStatus = over.data.current.booking.status
+    }
 
-    if (draggedBooking && STATUSES.find(s => s.id === overStatus)) {
-      if (draggedBooking.status !== overStatus) {
-        updateBookingStatus(draggedBooking.id, overStatus, draggedBooking.ghl_contact_id)
+    // Update if it's a valid status and different from current
+    if (draggedBooking && STATUSES.find(s => s.id === targetStatus)) {
+      if (draggedBooking.status !== targetStatus) {
+        updateBookingStatus(draggedBooking.id, targetStatus, draggedBooking.ghl_contact_id)
       }
     }
   }
