@@ -89,7 +89,8 @@ export default function BookingFormNew({ isOpen, onClose }) {
   const calculatePrice = () => {
     if (!selectedCar || !duration) return 0
     
-    const baseRate = selectedCar.price_per_day
+    // Convert to number in case it's stored as string
+    const baseRate = parseFloat(selectedCar.price_per_day) || 0
     let price = 0
     
     if (duration === 6) {
@@ -101,7 +102,7 @@ export default function BookingFormNew({ isOpen, onClose }) {
     }
     
     if (needDriver && selectedDriver) {
-      const driverRate = selectedDriver.rate_per_day
+      const driverRate = parseFloat(selectedDriver.rate_per_day) || 0
       if (duration === 6) {
         price += driverRate * 0.3
       } else if (duration === 12) {
@@ -354,7 +355,7 @@ export default function BookingFormNew({ isOpen, onClose }) {
                       <p className="text-sm text-gray-600">{car.brand} {car.model}</p>
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-xs text-gray-500">{car.year} • {car.transmission}</span>
-                        <span className="font-semibold text-primary">{formatCurrency(car.price_per_day)}/day</span>
+                        <span className="font-semibold text-primary">{formatCurrency(parseFloat(car.price_per_day) || 0)}/day</span>
                       </div>
                       <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
                         <span>👥 {car.seating_capacity} seats</span>
@@ -460,7 +461,7 @@ export default function BookingFormNew({ isOpen, onClose }) {
                             <h4 className="font-semibold">{driver.name}</h4>
                             <p className="text-sm text-gray-600">{driver.license_number}</p>
                             <p className="text-sm font-medium text-primary mt-1">
-                              +{formatCurrency(driver.rate_per_day)}/day
+                              +{formatCurrency(parseFloat(driver.rate_per_day) || 0)}/day
                             </p>
                           </div>
                         </CardContent>
@@ -513,7 +514,7 @@ export default function BookingFormNew({ isOpen, onClose }) {
                       <h4 className="font-semibold text-xl">6 Hours</h4>
                       <p className="text-sm text-gray-600 mt-2">Half day</p>
                       <p className="text-lg font-bold text-primary mt-3">
-                        {formatCurrency(selectedCar.price_per_day * 0.3)}
+                        {formatCurrency((parseFloat(selectedCar.price_per_day) || 0) * 0.3)}
                       </p>
                     </CardContent>
                   </Card>
@@ -532,7 +533,7 @@ export default function BookingFormNew({ isOpen, onClose }) {
                     <h4 className="font-semibold text-xl">12 Hours</h4>
                     <p className="text-sm text-gray-600 mt-2">Extended</p>
                     <p className="text-lg font-bold text-primary mt-3">
-                      {formatCurrency(selectedCar.price_per_day * 0.5)}
+                      {formatCurrency((parseFloat(selectedCar.price_per_day) || 0) * 0.5)}
                     </p>
                   </CardContent>
                 </Card>
@@ -550,7 +551,7 @@ export default function BookingFormNew({ isOpen, onClose }) {
                     <h4 className="font-semibold text-xl">24 Hours</h4>
                     <p className="text-sm text-gray-600 mt-2">Full day</p>
                     <p className="text-lg font-bold text-primary mt-3">
-                      {formatCurrency(selectedCar.price_per_day)}
+                      {formatCurrency(parseFloat(selectedCar.price_per_day) || 0)}
                     </p>
                   </CardContent>
                 </Card>
