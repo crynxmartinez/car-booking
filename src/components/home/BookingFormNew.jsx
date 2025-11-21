@@ -49,21 +49,50 @@ export default function BookingFormNew({ isOpen, onClose }) {
   }, [isOpen])
 
   const fetchCars = async () => {
-    const { data } = await supabase
-      .from('cars')
-      .select('*')
-      .eq('status', 'available')
-      .order('name')
-    setCars(data || [])
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .eq('status', 'available')
+        .order('name')
+      
+      if (error) {
+        console.error('Error fetching cars:', error)
+        // Try without status filter if error
+        const { data: allCars } = await supabase
+          .from('cars')
+          .select('*')
+          .order('name')
+        setCars(allCars || [])
+      } else {
+        setCars(data || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch cars:', err)
+    }
   }
 
   const fetchDrivers = async () => {
-    const { data } = await supabase
-      .from('drivers')
-      .select('*')
-      .eq('status', 'available')
-      .order('name')
-    setDrivers(data || [])
+    try {
+      const { data, error } = await supabase
+        .from('drivers')
+        .select('*')
+        .eq('status', 'available')
+        .order('name')
+      
+      if (error) {
+        console.error('Error fetching drivers:', error)
+        const { data: allDrivers } = await supabase
+          .from('drivers')
+          .select('*')
+          .order('name')
+        setDrivers(allDrivers || [])
+      } else {
+        setDrivers(data || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch drivers:', err)
+    }
   }
 
   const calculatePrice = () => {
