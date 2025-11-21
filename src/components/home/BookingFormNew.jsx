@@ -335,9 +335,9 @@ export default function BookingFormNew({ isOpen, onClose }) {
                     onClick={() => setSelectedCar(car)}
                   >
                     <CardContent className="p-4">
-                      {car.image_url && (
+                      {(car.images?.[0] || car.image_url) && (
                         <img
-                          src={car.image_url}
+                          src={car.images?.[0] || car.image_url}
                           alt={car.name}
                           className="w-full h-40 object-cover rounded-lg mb-3"
                         />
