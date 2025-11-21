@@ -31,11 +31,12 @@ ON CONFLICT (id) DO NOTHING;
 DROP POLICY IF EXISTS "Allow authenticated uploads to car-images" ON storage.objects;
 DROP POLICY IF EXISTS "Public read access for car-images" ON storage.objects;
 DROP POLICY IF EXISTS "Allow authenticated deletes from car-images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public uploads to car-images" ON storage.objects;
 
--- Create new policies
-CREATE POLICY "Allow authenticated uploads to car-images"
+-- Create new policies (allow public uploads for easier admin access)
+CREATE POLICY "Allow public uploads to car-images"
 ON storage.objects FOR INSERT
-TO authenticated
+TO public
 WITH CHECK (bucket_id = 'car-images');
 
 CREATE POLICY "Public read access for car-images"
@@ -53,11 +54,12 @@ USING (bucket_id = 'car-images');
 DROP POLICY IF EXISTS "Allow authenticated uploads to driver-photos" ON storage.objects;
 DROP POLICY IF EXISTS "Public read access for driver-photos" ON storage.objects;
 DROP POLICY IF EXISTS "Allow authenticated deletes from driver-photos" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public uploads to driver-photos" ON storage.objects;
 
--- Create new policies
-CREATE POLICY "Allow authenticated uploads to driver-photos"
+-- Create new policies (allow public uploads for easier admin access)
+CREATE POLICY "Allow public uploads to driver-photos"
 ON storage.objects FOR INSERT
-TO authenticated
+TO public
 WITH CHECK (bucket_id = 'driver-photos');
 
 CREATE POLICY "Public read access for driver-photos"
