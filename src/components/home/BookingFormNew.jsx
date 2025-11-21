@@ -320,15 +320,7 @@ export default function BookingFormNew({ isOpen, onClose }) {
               <div className="text-center mb-6">
                 <CarIcon className="w-12 h-12 text-primary mx-auto mb-2" />
                 <h3 className="text-xl font-semibold">Choose Your Car</h3>
-                <p className="text-gray-600">Select from our available vehicles</p>
-              </div>
-
-              {/* Debug info */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
-                <p className="text-sm">
-                  <strong>Debug:</strong> Found {cars.length} car(s). 
-                  {cars.length > 0 && ` First car: ${cars[0]?.name || 'No name'}`}
-                </p>
+                <p className="text-gray-600">Click to view pricing details</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -351,15 +343,33 @@ export default function BookingFormNew({ isOpen, onClose }) {
                         />
                       )}
                       <h4 className="font-semibold text-lg">{car.name}</h4>
-                      <p className="text-sm text-gray-600">{car.brand} {car.model}</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <span className="text-xs text-gray-500">{car.year}</span>
-                        <span className="font-semibold text-primary">{formatCurrency(parseFloat(car.price_24hrs) || 0)}/24h</span>
-                      </div>
-                      <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
-                        <span>👥 {car.seating_capacity} seats</span>
-                        <span>⛽ {car.fuel_type}</span>
-                      </div>
+                      <p className="text-sm text-gray-600 mb-3">{car.brand} {car.model} • {car.year}</p>
+                      
+                      {/* Show pricing when selected */}
+                      {selectedCar?.id === car.id && (
+                        <div className="mt-3 pt-3 border-t space-y-2">
+                          <p className="text-xs font-semibold text-gray-700 mb-2">Pricing:</p>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">6 Hours:</span>
+                            <span className="font-semibold text-primary">{formatCurrency(parseFloat(car.price_6hrs) || 0)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">12 Hours:</span>
+                            <span className="font-semibold text-primary">{formatCurrency(parseFloat(car.price_12hrs) || 0)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">24 Hours:</span>
+                            <span className="font-semibold text-primary">{formatCurrency(parseFloat(car.price_24hrs) || 0)}</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {!selectedCar || selectedCar?.id !== car.id ? (
+                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
+                          <span>👥 {car.seating_capacity} seats</span>
+                          <span>⛽ {car.fuel_type}</span>
+                        </div>
+                      ) : null}
                     </CardContent>
                   </Card>
                 ))}
@@ -368,7 +378,6 @@ export default function BookingFormNew({ isOpen, onClose }) {
               {cars.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   <p className="mb-2">No cars available. Please add cars in the admin panel.</p>
-                  <p className="text-xs">Check browser console (F12) for more details.</p>
                 </div>
               )}
 
@@ -444,25 +453,43 @@ export default function BookingFormNew({ isOpen, onClose }) {
                         }`}
                         onClick={() => setSelectedDriver(driver)}
                       >
-                        <CardContent className="p-4 flex items-center gap-4">
-                          {driver.photo_url ? (
-                            <img
-                              src={driver.photo_url}
-                              alt={driver.name}
-                              className="w-16 h-16 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                              <User className="w-8 h-8 text-gray-400" />
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-4 mb-3">
+                            {driver.photo_url ? (
+                              <img
+                                src={driver.photo_url}
+                                alt={driver.name}
+                                className="w-16 h-16 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                                <User className="w-8 h-8 text-gray-400" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{driver.name}</h4>
+                              <p className="text-sm text-gray-600">{driver.license_number}</p>
+                            </div>
+                          </div>
+                          
+                          {/* Show pricing when selected */}
+                          {selectedDriver?.id === driver.id && (
+                            <div className="pt-3 border-t space-y-2">
+                              <p className="text-xs font-semibold text-gray-700 mb-2">Driver Fees:</p>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">6 Hours:</span>
+                                <span className="font-semibold text-primary">+{formatCurrency(parseFloat(driver.price_6hrs) || 0)}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">12 Hours:</span>
+                                <span className="font-semibold text-primary">+{formatCurrency(parseFloat(driver.price_12hrs) || 0)}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">24 Hours:</span>
+                                <span className="font-semibold text-primary">+{formatCurrency(parseFloat(driver.price_24hrs) || 0)}</span>
+                              </div>
                             </div>
                           )}
-                          <div className="flex-1">
-                            <h4 className="font-semibold">{driver.name}</h4>
-                            <p className="text-sm text-gray-600">{driver.license_number}</p>
-                            <p className="text-sm font-medium text-primary mt-1">
-                              +{formatCurrency(parseFloat(driver.price_24hrs) || 0)}/24h
-                            </p>
-                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -495,7 +522,28 @@ export default function BookingFormNew({ isOpen, onClose }) {
               <div className="text-center mb-6">
                 <Clock className="w-12 h-12 text-primary mx-auto mb-2" />
                 <h3 className="text-xl font-semibold">How long do you need the car?</h3>
-                <p className="text-gray-600">Select rental duration</p>
+                <p className="text-gray-600">Select rental duration to see your total price</p>
+              </div>
+
+              {/* Selected Summary */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <p className="text-sm font-semibold text-gray-700">Your Selection:</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Car:</span>
+                  <span className="font-medium">{selectedCar?.name}</span>
+                </div>
+                {needDriver && selectedDriver && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Driver:</span>
+                    <span className="font-medium">{selectedDriver?.name}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Trip Type:</span>
+                  <span className="font-medium">
+                    {tripType === 'within_city' ? 'Within City' : 'Outside City (+20%)'}
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
