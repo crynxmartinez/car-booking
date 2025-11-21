@@ -126,8 +126,26 @@ export default function BookingFormNew({ isOpen, onClose }) {
       const pickupDateTime = new Date(selectedDate)
       pickupDateTime.setHours(selectedTime)
       
-      const dropoffDateTime = new Date(pickupDateTime)
-      dropoffDateTime.setHours(pickupDateTime.getHours() + duration)
+      // Calculate individual prices
+      let carPrice = 0
+      if (duration === 6) {
+        carPrice = parseFloat(selectedCar.price_6hrs) || 0
+      } else if (duration === 12) {
+        carPrice = parseFloat(selectedCar.price_12hrs) || 0
+      } else if (duration === 24) {
+        carPrice = parseFloat(selectedCar.price_24hrs) || 0
+      }
+      
+      let driverPrice = 0
+      if (needDriver && selectedDriver) {
+        if (duration === 6) {
+          driverPrice = parseFloat(selectedDriver.price_6hrs) || 0
+        } else if (duration === 12) {
+          driverPrice = parseFloat(selectedDriver.price_12hrs) || 0
+        } else if (duration === 24) {
+          driverPrice = parseFloat(selectedDriver.price_24hrs) || 0
+        }
+      }
       
       const newBooking = {
         booking_reference: bookingReference,
@@ -139,13 +157,14 @@ export default function BookingFormNew({ isOpen, onClose }) {
         pickup_date: pickupDateTime.toISOString().split('T')[0],
         pickup_time: pickupDateTime.toTimeString().split(' ')[0],
         pickup_location: 'Office',
-        dropoff_date: dropoffDateTime.toISOString().split('T')[0],
-        dropoff_time: dropoffDateTime.toTimeString().split(' ')[0],
         dropoff_location: tripType === 'within_city' ? 'Office' : 'Outside City',
-        trip_type: tripType,
-        duration_hours: duration,
+        rental_duration: `${duration}hrs`,
+        is_outside_city: tripType === 'outside_city',
+        needs_driver: needDriver === true,
+        car_price: carPrice,
+        driver_price: driverPrice,
         total_price: calculatePrice(),
-        special_requests: customerData.special_requests,
+        special_requests: customerData.special_requests || null,
         status: 'pending_review'
       }
 
@@ -155,7 +174,10 @@ export default function BookingFormNew({ isOpen, onClose }) {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
 
       sendBookingToGHL({
         ...newBooking,
