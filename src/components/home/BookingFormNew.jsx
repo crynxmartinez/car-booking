@@ -179,8 +179,11 @@ export default function BookingFormNew({ isOpen, onClose }) {
         throw error
       }
 
+      // Send to GHL with car and driver names
       sendBookingToGHL({
         ...newBooking,
+        car_name: selectedCar.name,
+        driver_name: needDriver && selectedDriver ? selectedDriver.name : null,
         status: 'pending_review',
       }).catch(err => console.error('GHL integration failed (non-critical):', err))
 
