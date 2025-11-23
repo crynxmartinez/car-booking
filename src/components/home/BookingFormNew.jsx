@@ -191,7 +191,25 @@ export default function BookingFormNew({ isOpen, onClose }) {
       
       console.log('📤 Sending to GHL from BookingForm:', ghlData)
       
-      sendBookingToGHL(ghlData).catch(err => console.error('❌ GHL integration failed (non-critical):', err))
+      // Send to GHL and save contact ID
+      sendBookingToGHL(ghlData)
+        .then(async (result) => {
+          if (result.success && result.contactId) {
+            console.log('💾 Saving GHL Contact ID to database:', result.contactId)
+            // Update the booking with GHL contact ID
+            const { error: updateError } = await supabase
+              .from('bookings')
+              .update({ ghl_contact_id: result.contactId })
+              .eq('id', data.id)
+            
+            if (updateError) {
+              console.error('❌ Failed to save GHL contact ID:', updateError)
+            } else {
+              console.log('✅ GHL Contact ID saved successfully')
+            }
+          }
+        })
+        .catch(err => console.error('❌ GHL integration failed (non-critical):', err))
 
       // Show success modal
       setBookingRef(bookingReference)
