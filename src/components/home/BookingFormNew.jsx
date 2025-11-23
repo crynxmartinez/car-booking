@@ -187,7 +187,18 @@ export default function BookingFormNew({ isOpen, onClose }) {
         status: 'pending_review',
       }).catch(err => console.error('GHL integration failed (non-critical):', err))
 
-      showToast(`Booking successful! Your reference number is: ${bookingReference}`, 'success', 8000)
+      // Show success message with WhatsApp instructions
+      const whatsappNumber = '639479340392'
+      const successMessage = `✅ Booking Successful!\n\nReference: ${bookingReference}\n\n📱 Next Step: Chat "car" to our WhatsApp:\n+63 947 934 0392`
+      
+      showToast(successMessage, 'success', 10000)
+      
+      // Optional: Open WhatsApp after a delay
+      setTimeout(() => {
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=car`
+        window.open(whatsappUrl, '_blank')
+      }, 2000)
+      
       resetForm()
       onClose()
     } catch (error) {

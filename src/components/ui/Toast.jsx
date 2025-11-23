@@ -63,7 +63,7 @@ export function Toast({ message, type = 'info', duration = 5000, onClose }) {
       `}>
         <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${config.iconColor}`} />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium break-words">{message}</p>
+          <p className="text-sm font-medium break-words whitespace-pre-line">{message}</p>
         </div>
         <button
           onClick={handleClose}

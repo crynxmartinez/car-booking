@@ -37,6 +37,7 @@ Before the integration works properly, you need to create these custom fields in
 | Driver | `driver` | Text | Driver name or "No Driver" |
 | Price | `price` | Text | Total booking price |
 | Booking Reference | `booking_reference` | Text | Unique booking reference number |
+| Patient Phone Number | `patient_phone_number` | Text | Customer phone number (for WhatsApp) |
 
 ## How It Works
 
@@ -44,8 +45,10 @@ Before the integration works properly, you need to create these custom fields in
 When a user completes a booking:
 - Contact is created/updated in GHL with:
   - Name, Email, Phone
-  - Custom fields: car, booking_date_and_time, booking_time, driver, price, booking_reference
+  - Custom fields: car, booking_date_and_time, booking_time, driver, price, booking_reference, patient_phone_number
   - Tag: `pending review - car`
+- User receives success message with WhatsApp instructions
+- WhatsApp automatically opens with pre-filled message "car"
 
 ### 2. Status Changes (Kanban)
 When you drag a booking card to a different column:

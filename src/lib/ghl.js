@@ -45,6 +45,7 @@ export async function sendBookingToGHL(bookingData) {
         { key: 'driver', value: driverInfo },
         { key: 'price', value: priceFormatted },
         { key: 'booking_reference', value: booking_reference || 'N/A' },
+        { key: 'patient_phone_number', value: customer_phone },
       ],
     }
 
