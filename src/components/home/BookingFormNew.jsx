@@ -182,12 +182,16 @@ export default function BookingFormNew({ isOpen, onClose }) {
       }
 
       // Send to GHL with car and driver names
-      sendBookingToGHL({
+      const ghlData = {
         ...newBooking,
         car_name: selectedCar.name,
         driver_name: needDriver && selectedDriver ? selectedDriver.name : null,
         status: 'pending_review',
-      }).catch(err => console.error('GHL integration failed (non-critical):', err))
+      }
+      
+      console.log('📤 Sending to GHL from BookingForm:', ghlData)
+      
+      sendBookingToGHL(ghlData).catch(err => console.error('❌ GHL integration failed (non-critical):', err))
 
       // Show success modal
       setBookingRef(bookingReference)

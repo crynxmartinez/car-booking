@@ -22,10 +22,22 @@ export async function sendBookingToGHL(bookingData) {
       booking_reference,
     } = bookingData
 
+    // Debug: Log incoming data
+    console.log('=== GHL Integration Debug ===')
+    console.log('Raw booking data:', bookingData)
+    
     // Format date and time for GHL
     const bookingDateTime = `${pickup_date} ${pickup_time}`
     const driverInfo = driver_name || 'No Driver'
     const priceFormatted = `₱${parseFloat(total_price || 0).toFixed(2)}`
+
+    console.log('Formatted values:', {
+      bookingDateTime,
+      driverInfo,
+      priceFormatted,
+      car_name,
+      booking_reference
+    })
 
     // Format status for tag (e.g., "pending_review" -> "pending review - car")
     const statusLabel = status.replace(/_/g, ' ')
@@ -49,7 +61,7 @@ export async function sendBookingToGHL(bookingData) {
       ],
     }
 
-    console.log('Sending to GHL:', contactData)
+    console.log('Sending to GHL:', JSON.stringify(contactData, null, 2))
 
     const contactResponse = await fetch(`${GHL_API_BASE}/contacts/`, {
       method: 'POST',
@@ -63,12 +75,15 @@ export async function sendBookingToGHL(bookingData) {
 
     if (!contactResponse.ok) {
       const errorText = await contactResponse.text()
-      console.error('GHL API Error:', errorText)
+      console.error('❌ GHL API Error:', errorText)
+      console.error('Response status:', contactResponse.status)
       throw new Error(`Failed to create GHL contact: ${contactResponse.status}`)
     }
 
     const contact = await contactResponse.json()
-    console.log('GHL Contact created:', contact)
+    console.log('✅ GHL Contact created successfully!')
+    console.log('Contact ID:', contact.contact?.id)
+    console.log('Full response:', JSON.stringify(contact, null, 2))
 
     return {
       success: true,
