@@ -143,6 +143,11 @@ export default function KanbanBoard() {
   }
 
   const updateBookingStatus = async (bookingId, newStatus, ghlContactId) => {
+    console.log('🔄 Kanban: Updating booking status')
+    console.log('Booking ID:', bookingId)
+    console.log('New Status:', newStatus)
+    console.log('GHL Contact ID:', ghlContactId)
+    
     // Optimistic update - update UI immediately
     setBookings(prevBookings => 
       prevBookings.map(booking => 
@@ -161,16 +166,31 @@ export default function KanbanBoard() {
         })
         .eq('id', bookingId)
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Supabase update failed:', error)
+        throw error
+      }
+      
+      console.log('✅ Supabase booking status updated successfully')
 
       // Update GHL in background (non-blocking)
       if (ghlContactId) {
-        updateGHLContactTag(ghlContactId, newStatus).catch(err => 
-          console.error('GHL update failed (non-critical):', err)
-        )
+        console.log('📤 Sending tag update to GHL...')
+        console.log('Contact ID:', ghlContactId)
+        console.log('New tag will be:', `${newStatus.replace(/_/g, ' ')} - car`)
+        
+        updateGHLContactTag(ghlContactId, newStatus)
+          .then(result => {
+            console.log('✅ GHL tag update result:', result)
+          })
+          .catch(err => {
+            console.error('❌ GHL update failed (non-critical):', err)
+          })
+      } else {
+        console.warn('⚠️ No GHL Contact ID - skipping GHL update')
       }
     } catch (error) {
-      console.error('Error updating booking:', error)
+      console.error('❌ Error updating booking:', error)
       showToast('Failed to update booking status', 'error')
       // Revert on error
       fetchBookings()
@@ -189,9 +209,16 @@ export default function KanbanBoard() {
   const handleDragEnd = (event) => {
     const { active, over } = event
     
+    console.log('🎯 Drag ended')
+    console.log('Active (dragged):', active.data.current?.booking)
+    console.log('Over (target):', over?.id)
+    
     setActiveBooking(null)
     
-    if (!over) return
+    if (!over) {
+      console.log('⚠️ No drop target')
+      return
+    }
 
     const draggedBooking = active.data.current?.booking
     
@@ -201,13 +228,21 @@ export default function KanbanBoard() {
     // If dropped on another card, get that card's status
     if (over.data.current?.booking) {
       targetStatus = over.data.current.booking.status
+      console.log('📍 Dropped on another card, using its status:', targetStatus)
+    } else {
+      console.log('📍 Dropped on column:', targetStatus)
     }
 
     // Update if it's a valid status and different from current
     if (draggedBooking && STATUSES.find(s => s.id === targetStatus)) {
       if (draggedBooking.status !== targetStatus) {
+        console.log(`✅ Status change detected: ${draggedBooking.status} → ${targetStatus}`)
         updateBookingStatus(draggedBooking.id, targetStatus, draggedBooking.ghl_contact_id)
+      } else {
+        console.log('ℹ️ Same status, no update needed')
       }
+    } else {
+      console.log('❌ Invalid target status or no booking data')
     }
   }
 
