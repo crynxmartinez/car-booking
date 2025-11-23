@@ -13,6 +13,8 @@ import Calendar from './Calendar'
 export default function BookingFormNew({ isOpen, onClose }) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [bookingRef, setBookingRef] = useState('')
   
   // Step 1: Date & Time
   const [selectedDate, setSelectedDate] = useState(null)
@@ -187,20 +189,10 @@ export default function BookingFormNew({ isOpen, onClose }) {
         status: 'pending_review',
       }).catch(err => console.error('GHL integration failed (non-critical):', err))
 
-      // Show success message with WhatsApp instructions
-      const whatsappNumber = '639479340392'
-      const successMessage = `✅ Booking Successful!\n\nReference: ${bookingReference}\n\n📱 Next Step: Chat "car" to our WhatsApp:\n+63 947 934 0392`
-      
-      showToast(successMessage, 'success', 10000)
-      
-      // Optional: Open WhatsApp after a delay
-      setTimeout(() => {
-        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=car`
-        window.open(whatsappUrl, '_blank')
-      }, 2000)
-      
+      // Show success modal
+      setBookingRef(bookingReference)
+      setShowSuccessModal(true)
       resetForm()
-      onClose()
     } catch (error) {
       console.error('Error creating booking:', error)
       showToast('Failed to create booking. Please try again.', 'error')
@@ -787,6 +779,50 @@ export default function BookingFormNew({ isOpen, onClose }) {
           )}
         </div>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Booking Successful!</h2>
+            <p className="text-gray-600 mb-4">Your reference number:</p>
+            <p className="text-3xl font-bold text-primary mb-6">{bookingRef}</p>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-gray-700 mb-3">
+                📱 <strong>Next Step:</strong> Click the button below and chat <strong>"car"</strong> to get your booking details.
+              </p>
+            </div>
+
+            <Button
+              onClick={() => {
+                const whatsappUrl = `https://wa.me/639479340392?text=car`
+                window.open(whatsappUrl, '_blank')
+              }}
+              className="w-full mb-3 bg-green-500 hover:bg-green-600"
+            >
+              💬 Chat on WhatsApp
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSuccessModal(false)
+                onClose()
+              }}
+              className="w-full"
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
