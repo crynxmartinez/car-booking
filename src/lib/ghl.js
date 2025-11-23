@@ -66,8 +66,8 @@ export async function sendBookingToGHL(bookingData) {
     console.log('API Key (first 10 chars):', GHL_API_KEY?.substring(0, 10))
     console.log('Location ID:', GHL_LOCATION_ID)
 
-    // Use correct GHL API endpoint and headers
-    const contactResponse = await fetch(`${GHL_API_BASE}/contacts/`, {
+    // Use upsert endpoint to handle existing contacts
+    const contactResponse = await fetch(`${GHL_API_BASE}/contacts/upsert`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${GHL_API_KEY}`,
