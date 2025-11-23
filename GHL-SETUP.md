@@ -45,44 +45,44 @@ When a user completes a booking:
 - Contact is created/updated in GHL with:
   - Name, Email, Phone
   - Custom fields: car, booking_date_and_time, booking_time, driver, price, booking_reference
-  - Tags: `car` + `pending_review`
+  - Tag: `pending review - car`
 
 ### 2. Status Changes (Kanban)
 When you drag a booking card to a different column:
-- Contact tags are updated in GHL
-- Tags: `car` + new status (e.g., `approved`, `confirmed`, etc.)
+- Contact tag is updated in GHL to match the new status
 
 ### 3. Available Tags
-- `car` - Always present (identifies car booking contacts)
-- `pending_review` - New bookings awaiting review
-- `approved` - Booking approved by admin
-- `confirmed` - Customer confirmed the booking
-- `in_progress` - Rental is currently active
-- `completed` - Rental completed successfully
-- `cancelled` - Booking was cancelled
+Each tag follows the format: `[status] - car`
+
+- `pending review - car` - New bookings awaiting review
+- `approved - car` - Booking approved by admin
+- `confirmed - car` - Customer confirmed the booking
+- `in progress - car` - Rental is currently active
+- `completed - car` - Rental completed successfully
+- `cancelled - car` - Booking was cancelled
 
 ## GHL Automation Examples
 
 You can create automations in GHL based on these tags:
 
 ### Example 1: Welcome Email
-**Trigger:** Contact tagged with `pending_review`
+**Trigger:** Contact tagged with `pending review - car`
 **Action:** Send email with booking confirmation and payment instructions
 
 ### Example 2: Confirmation Reminder
-**Trigger:** Contact tagged with `approved`
+**Trigger:** Contact tagged with `approved - car`
 **Action:** Send SMS reminder to confirm booking
 
 ### Example 3: Pickup Reminder
-**Trigger:** Contact tagged with `confirmed` + booking date is tomorrow
+**Trigger:** Contact tagged with `confirmed - car` + booking date is tomorrow
 **Action:** Send SMS with pickup details and office address
 
 ### Example 4: Thank You Message
-**Trigger:** Contact tagged with `completed`
+**Trigger:** Contact tagged with `completed - car`
 **Action:** Send thank you email and request review
 
 ### Example 5: Cancellation Follow-up
-**Trigger:** Contact tagged with `cancelled`
+**Trigger:** Contact tagged with `cancelled - car`
 **Action:** Send email asking for feedback
 
 ## Custom Field Usage in GHL

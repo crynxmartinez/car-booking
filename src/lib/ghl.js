@@ -27,13 +27,17 @@ export async function sendBookingToGHL(bookingData) {
     const driverInfo = driver_name || 'No Driver'
     const priceFormatted = `₱${parseFloat(total_price || 0).toFixed(2)}`
 
+    // Format status for tag (e.g., "pending_review" -> "pending review - car")
+    const statusLabel = status.replace(/_/g, ' ')
+    const tagName = `${statusLabel} - car`
+
     // Prepare contact data with custom fields
     const contactData = {
       locationId: GHL_LOCATION_ID,
       email: customer_email,
       phone: customer_phone,
       name: customer_name,
-      tags: ['car', status], // Add both 'car' and status tag
+      tags: [tagName], // Single combined tag
       customFields: [
         { key: 'car', value: car_name || 'N/A' },
         { key: 'booking_date_and_time', value: bookingDateTime },
@@ -87,7 +91,11 @@ export async function updateGHLContactTag(contactId, newStatus) {
       return { success: false, error: 'GHL not configured' }
     }
 
-    console.log(`Updating GHL contact ${contactId} with status: ${newStatus}`)
+    // Format status for tag (e.g., "pending_review" -> "pending review - car")
+    const statusLabel = newStatus.replace(/_/g, ' ')
+    const tagName = `${statusLabel} - car`
+
+    console.log(`Updating GHL contact ${contactId} with tag: ${tagName}`)
 
     const response = await fetch(`${GHL_API_BASE}/contacts/${contactId}`, {
       method: 'PUT',
@@ -97,7 +105,7 @@ export async function updateGHLContactTag(contactId, newStatus) {
         'Version': '2021-07-28',
       },
       body: JSON.stringify({
-        tags: ['car', newStatus], // Keep 'car' tag and add new status
+        tags: [tagName], // Single combined tag
       }),
     })
 
