@@ -66,6 +66,7 @@ export async function sendBookingToGHL(bookingData) {
     console.log('API Key (first 10 chars):', GHL_API_KEY?.substring(0, 10))
     console.log('Location ID:', GHL_LOCATION_ID)
 
+    // Use correct GHL API endpoint and headers
     const contactResponse = await fetch(`${GHL_API_BASE}/contacts/`, {
       method: 'POST',
       headers: {
@@ -75,6 +76,9 @@ export async function sendBookingToGHL(bookingData) {
       },
       body: JSON.stringify(contactData),
     })
+    
+    console.log('Response status:', contactResponse.status)
+    console.log('Response headers:', Object.fromEntries(contactResponse.headers.entries()))
 
     if (!contactResponse.ok) {
       const errorText = await contactResponse.text()
