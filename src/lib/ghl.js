@@ -63,6 +63,9 @@ export async function sendBookingToGHL(bookingData) {
 
     console.log('Sending to GHL:', JSON.stringify(contactData, null, 2))
 
+    console.log('API Key (first 10 chars):', GHL_API_KEY?.substring(0, 10))
+    console.log('Location ID:', GHL_LOCATION_ID)
+
     const contactResponse = await fetch(`${GHL_API_BASE}/contacts/`, {
       method: 'POST',
       headers: {
