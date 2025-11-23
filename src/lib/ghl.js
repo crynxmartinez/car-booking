@@ -1,5 +1,5 @@
-const GHL_API_KEY = import.meta.env.VITE_GHL_API_KEY
-const GHL_LOCATION_ID = import.meta.env.VITE_GHL_LOCATION_ID
+const GHL_API_KEY = import.meta.env.VITE_GHL_API_KEY || import.meta.env.GHL_API_KEY
+const GHL_LOCATION_ID = import.meta.env.VITE_GHL_LOCATION_ID || import.meta.env.GHL_LOCATION_ID
 const GHL_API_BASE = 'https://services.leadconnectorhq.com'
 
 export async function sendBookingToGHL(bookingData) {
