@@ -144,8 +144,10 @@ export default function BookingFormNew({ isOpen, onClose }) {
     
     try {
       const bookingReference = generateBookingReference()
+      
+      // Create date in Philippine timezone (UTC+8)
       const pickupDateTime = new Date(selectedDate)
-      pickupDateTime.setHours(selectedTime)
+      pickupDateTime.setHours(selectedTime, 0, 0, 0)
       
       // Calculate individual prices
       let carPrice = 0
@@ -168,6 +170,16 @@ export default function BookingFormNew({ isOpen, onClose }) {
         }
       }
       
+      // Format date in Philippine timezone (YYYY-MM-DD)
+      const year = pickupDateTime.getFullYear()
+      const month = String(pickupDateTime.getMonth() + 1).padStart(2, '0')
+      const day = String(pickupDateTime.getDate()).padStart(2, '0')
+      const formattedDate = `${year}-${month}-${day}`
+      
+      // Format time (HH:MM:SS)
+      const hours = String(pickupDateTime.getHours()).padStart(2, '0')
+      const formattedTime = `${hours}:00:00`
+      
       const newBooking = {
         booking_reference: bookingReference,
         customer_name: customerData.name,
@@ -175,8 +187,8 @@ export default function BookingFormNew({ isOpen, onClose }) {
         customer_phone: customerData.phone,
         car_id: selectedCar.id,
         driver_id: needDriver ? selectedDriver?.id : null,
-        pickup_date: pickupDateTime.toISOString().split('T')[0],
-        pickup_time: pickupDateTime.toTimeString().split(' ')[0],
+        pickup_date: formattedDate,
+        pickup_time: formattedTime,
         pickup_location: 'Office',
         dropoff_location: tripType === 'within_city' ? 'Office' : 'Outside City',
         rental_duration: `${duration}hrs`,
