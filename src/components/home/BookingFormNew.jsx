@@ -244,7 +244,8 @@ export default function BookingFormNew({ isOpen, onClose }) {
               reference: bookingReference,
               customer: {
                 name: customerData.name,
-                email: customerData.email
+                email: customerData.email,
+                phone: customerData.phone
               },
               successUrl: `${window.location.origin}/payment/success?booking_id=${data.id}`,
               failureUrl: `${window.location.origin}/payment/failure?booking_id=${data.id}`
