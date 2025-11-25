@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Calendar as CalendarIcon, MapPin, Car as CarIcon, User, Clock } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { sendBookingToGHL } from '../../lib/ghl'
+import { getDepositAmount, isDepositEnabled } from '../../lib/settings'
 import { formatCurrency, generateBookingReference } from '../../lib/utils'
 import { showToast } from '../ui/Toast'
 import Button from '../ui/Button'
@@ -15,6 +16,8 @@ export default function BookingFormNew({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [bookingRef, setBookingRef] = useState('')
+  const [depositAmount, setDepositAmount] = useState(20)
+  const [requireDeposit, setRequireDeposit] = useState(true)
   
   // Step 1: Date & Time
   const [selectedDate, setSelectedDate] = useState(null)
@@ -47,8 +50,24 @@ export default function BookingFormNew({ isOpen, onClose }) {
     if (isOpen) {
       fetchCars()
       fetchDrivers()
+      fetchDepositSettings()
     }
   }, [isOpen])
+
+  const fetchDepositSettings = async () => {
+    try {
+      const amount = await getDepositAmount()
+      const enabled = await isDepositEnabled()
+      setDepositAmount(amount)
+      setRequireDeposit(enabled)
+      console.log('💰 Deposit settings:', { amount, enabled })
+    } catch (error) {
+      console.error('Error fetching deposit settings:', error)
+      // Use defaults if fetch fails
+      setDepositAmount(20)
+      setRequireDeposit(true)
+    }
+  }
 
   const fetchCars = async () => {
     try {
@@ -167,7 +186,9 @@ export default function BookingFormNew({ isOpen, onClose }) {
         driver_price: driverPrice,
         total_price: calculatePrice(),
         special_requests: customerData.special_requests || null,
-        status: 'pending_review'
+        status: 'pending_review',
+        payment_status: 'pending',
+        payment_amount: depositAmount
       }
 
       const { data, error } = await supabase
@@ -191,30 +212,72 @@ export default function BookingFormNew({ isOpen, onClose }) {
       
       console.log('📤 Sending to GHL from BookingForm:', ghlData)
       
-      // Send to GHL and save contact ID
+      // Send to GHL and save contact ID (non-blocking)
       sendBookingToGHL(ghlData)
         .then(async (result) => {
           if (result.success && result.contactId) {
             console.log('💾 Saving GHL Contact ID to database:', result.contactId)
-            // Update the booking with GHL contact ID
-            const { error: updateError } = await supabase
+            await supabase
               .from('bookings')
               .update({ ghl_contact_id: result.contactId })
               .eq('id', data.id)
-            
-            if (updateError) {
-              console.error('❌ Failed to save GHL contact ID:', updateError)
-            } else {
-              console.log('✅ GHL Contact ID saved successfully')
-            }
+            console.log('✅ GHL Contact ID saved successfully')
           }
         })
         .catch(err => console.error('❌ GHL integration failed (non-critical):', err))
 
-      // Show success modal
-      setBookingRef(bookingReference)
-      setShowSuccessModal(true)
-      resetForm()
+      // If deposit is required, initiate payment
+      if (requireDeposit) {
+        console.log('💳 Initiating payment for ₱' + depositAmount)
+        
+        try {
+          // Create payment via API
+          const paymentResponse = await fetch('/api/create-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              bookingId: data.id,
+              amount: depositAmount,
+              currency: 'PHP',
+              reference: bookingReference,
+              customer: {
+                name: customerData.name,
+                email: customerData.email
+              },
+              successUrl: `${window.location.origin}/payment/success?booking_id=${data.id}`,
+              failureUrl: `${window.location.origin}/payment/failure?booking_id=${data.id}`
+            })
+          })
+
+          const paymentData = await paymentResponse.json()
+
+          if (paymentData.success && paymentData.redirectUrl) {
+            console.log('✅ Payment created:', paymentData.paymentId)
+            
+            // Save payment ID to booking
+            await supabase
+              .from('bookings')
+              .update({ payment_id: paymentData.paymentId })
+              .eq('id', data.id)
+
+            // Redirect to GCash payment page
+            window.location.href = paymentData.redirectUrl
+          } else {
+            throw new Error(paymentData.error || 'Failed to create payment')
+          }
+        } catch (paymentError) {
+          console.error('❌ Payment creation failed:', paymentError)
+          showToast('Booking created but payment failed. Please contact support.', 'error')
+          setLoading(false)
+        }
+      } else {
+        // No deposit required, show success modal
+        setBookingRef(bookingReference)
+        setShowSuccessModal(true)
+        resetForm()
+      }
     } catch (error) {
       console.error('Error creating booking:', error)
       showToast('Failed to create booking. Please try again.', 'error')
@@ -777,12 +840,32 @@ export default function BookingFormNew({ isOpen, onClose }) {
                 </div>
 
                 <div className="border-t pt-3 mt-3">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between mb-2">
                     <span className="font-semibold text-lg">Total Price:</span>
                     <span className="font-bold text-2xl text-primary">
                       {formatCurrency(calculatePrice())}
                     </span>
                   </div>
+                  
+                  {requireDeposit && (
+                    <>
+                      <div className="flex justify-between text-sm text-green-600 mt-2">
+                        <span className="font-medium">Deposit Required:</span>
+                        <span className="font-semibold">₱{depositAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Balance Due (on pickup):</span>
+                        <span className="font-medium">
+                          ₱{(calculatePrice() - depositAmount).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                        <p className="text-xs text-blue-800">
+                          💳 You'll be redirected to GCash to pay the ₱{depositAmount.toFixed(2)} deposit
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 

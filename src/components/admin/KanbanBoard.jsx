@@ -80,7 +80,21 @@ function DraggableBookingCard({ booking, onClick }) {
         }}
       >
         <CardContent className="p-3">
-          <div className="font-semibold text-sm mb-1">{booking.booking_reference}</div>
+          <div className="flex items-center justify-between mb-1">
+            <div className="font-semibold text-sm">{booking.booking_reference}</div>
+            {booking.payment_status && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                booking.payment_status === 'paid' 
+                  ? 'bg-green-100 text-green-700' 
+                  : booking.payment_status === 'pending'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : 'bg-red-100 text-red-700'
+              }`}>
+                {booking.payment_status === 'paid' ? '✓ Paid' : 
+                 booking.payment_status === 'pending' ? '⏳ Pending' : '✗ Failed'}
+              </span>
+            )}
+          </div>
           <div className="text-xs text-gray-600 space-y-1">
             <div className="flex items-center">
               <User className="w-3 h-3 mr-1" />

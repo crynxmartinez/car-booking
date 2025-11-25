@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { LayoutDashboard, Car, Users, BarChart3, LogOut } from 'lucide-react'
+import { LayoutDashboard, Car, Users, BarChart3, Settings as SettingsIcon, LogOut } from 'lucide-react'
 import KanbanBoard from '../components/admin/KanbanBoard'
 import CarsManagement from '../components/admin/CarsManagement'
 import DriversManagement from '../components/admin/DriversManagement'
 import Analytics from '../components/admin/Analytics'
+import Settings from '../components/admin/Settings'
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -15,6 +16,7 @@ export default function AdminDashboard() {
     { name: 'Cars', href: '/admin/cars', icon: Car },
     { name: 'Drivers', href: '/admin/drivers', icon: Users },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+    { name: 'Settings', href: '/admin/settings', icon: SettingsIcon },
   ]
 
   return (
@@ -65,6 +67,7 @@ export default function AdminDashboard() {
           <Route path="cars" element={<CarsManagement />} />
           <Route path="drivers" element={<DriversManagement />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
         </Routes>
       </div>
